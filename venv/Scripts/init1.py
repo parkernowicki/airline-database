@@ -10,7 +10,7 @@ conn = pymysql.connect(host='localhost',
 					   port = 3306,
                        user='root',
                        password='',
-                       db='blog',
+                       db='airline',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
 
@@ -18,6 +18,28 @@ conn = pymysql.connect(host='localhost',
 @app.route('/')
 def hello():
 	return render_template('index.html')
+
+#Define route for viewing flights
+@app.route('/viewflights')
+def viewflights():
+	return render_template('viewflights.html')
+
+#Search by source
+@app.route('/flightBySource', methods=['GET', 'POST'])
+def flightBySource():
+	#grabs information from the forms
+	airport = request.form['sourceairport']
+
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = 'SELECT * FROM flight WHERE depart_airport = %s AND depart_date >= CURRENT_DATE() AND depart_date >= CURRENT_TIME()'
+	cursor.execute(query, (airport))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return redirect(url_for('viewflights'))
 
 #Define route for login
 @app.route('/login')
@@ -87,7 +109,7 @@ def registerAuth():
 def home():
     
     username = session['username']
-    cursor = conn.cursor();
+    cursor = conn.cursor()
     query = 'SELECT ts, blog_post FROM blog WHERE username = %s ORDER BY ts DESC'
     cursor.execute(query, (username))
     data1 = cursor.fetchall() 
@@ -95,12 +117,11 @@ def home():
         print(each['blog_post'])
     cursor.close()
     return render_template('home.html', username=username, posts=data1)
-
 		
 @app.route('/post', methods=['GET', 'POST'])
 def post():
 	username = session['username']
-	cursor = conn.cursor();
+	cursor = conn.cursor()
 	blog = request.form['blog']
 	query = 'INSERT INTO blog (blog_post, username) VALUES(%s, %s)'
 	cursor.execute(query, (blog, username))

@@ -1,0 +1,74 @@
+<html>
+<head>
+</head>
+<body>
+    Search by source </br>
+    <form action="/flightBySource" method="POST">
+        <input type="text" name="sourceairport" placeholder="Source airport" required /></br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    Search by destination </br>
+    <form action="/flightByDest" method="POST">
+        <input type="text" name="destairport" placeholder="Destination airport" required /></br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    Search by departure date </br>
+    <form action="/flightByDate" method="POST">
+        <input type="date" name="departdate" required /> </br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    <!-- Will need round trip date search as well... -->
+
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+        }
+    </style>
+
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{flights['airline_name']}}</td>
+            <td>{{flights['flight_num']}}</td>
+            <td>{{flights['depart_date']}}</td>
+            <td>{{flights['depart_time']}}</td>
+            <td>{{flights['arrive_date']}}</td>
+            <td>{{flights['arrive_time']}}</td>
+            <td>{{flights['flight_status']}}</td>
+            <td>{{flights['base_price']}}</td>
+            <td>{{flights['depart_airport']}}</td>
+            <td>{{flights['arrive_airport']}}</td>
+            <td>{{flights['airplane_ID']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="/">Go back</a>
+
+</body>
+
+</html>
