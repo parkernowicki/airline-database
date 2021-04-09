@@ -1,5 +1,8 @@
 <html>
 <head>
+    <h1>
+        Welcome to the NYU Tandon Airline Database System
+    </h1>
 </head>
 <body>
     Search by source </br>
@@ -52,17 +55,17 @@
 
         {% for line in flights %}
         <tr>
-            <td>{{flights['airline_name']}}</td>
-            <td>{{flights['flight_num']}}</td>
-            <td>{{flights['depart_date']}}</td>
-            <td>{{flights['depart_time']}}</td>
-            <td>{{flights['arrive_date']}}</td>
-            <td>{{flights['arrive_time']}}</td>
-            <td>{{flights['flight_status']}}</td>
-            <td>{{flights['base_price']}}</td>
-            <td>{{flights['depart_airport']}}</td>
-            <td>{{flights['arrive_airport']}}</td>
-            <td>{{flights['airplane_ID']}}</td>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
         </tr>
         {% endfor %}
     </table>

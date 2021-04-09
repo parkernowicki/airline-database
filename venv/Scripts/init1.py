@@ -39,17 +39,54 @@ def flightBySource():
 	data = cursor.fetchall()
 	#use fetchall() if you are expecting more than 1 data row
 	cursor.close()
-	return redirect(url_for('viewflights'))
+	return render_template('viewflights.html', flights=data)
 
-#Define route for login
-@app.route('/login')
-def login():
-	return render_template('login.html')
+#Define route for customer login
+@app.route('/logincust')
+def logincust():
+	return render_template('logincust.html')
+
+#Define route for customer login
+@app.route('/loginagent')
+def loginagent():
+	return render_template('loginagent.html')
+
+#Define route for customer login
+@app.route('/loginstaff')
+def loginstaff():
+	return render_template('loginstaff.html')
 
 #Define route for register
 @app.route('/register')
 def register():
 	return render_template('register.html')
+
+#Authenticates the customer login
+@app.route('/loginCustAuth', methods=['GET', 'POST'])
+def loginCustAuth():
+	#grabs information from the forms
+	email = request.form['email']
+	password = request.form['password']
+
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = 'SELECT * FROM customer WHERE email = %s and password = %s'
+	cursor.execute(query, (email, password))
+	#stores the results in a variable
+	data = cursor.fetchone()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	error = None
+	if(data):
+		#creates a session for the the user
+		#session is a built in
+		session['email'] = email
+		return redirect(url_for('homecust'))
+	else:
+		#returns an error message to the html page
+		error = 'Invalid login or email'
+		return render_template('logincust.html', error=error)
 
 #Authenticates the login
 @app.route('/loginAuth', methods=['GET', 'POST'])
@@ -105,6 +142,18 @@ def registerAuth():
 		cursor.close()
 		return render_template('index.html')
 
+#Home page for customer
+@app.route('/homecust')
+def homecust():
+
+    email = session['email']
+    cursor = conn.cursor()
+    query = 'SELECT * FROM customer WHERE email = %s'
+    cursor.execute(query, (email))
+    data = cursor.fetchone() 
+    cursor.close()
+    return render_template('homecust.html', customer=data)
+
 @app.route('/home')
 def home():
     
@@ -117,7 +166,7 @@ def home():
         print(each['blog_post'])
     cursor.close()
     return render_template('home.html', username=username, posts=data1)
-		
+
 @app.route('/post', methods=['GET', 'POST'])
 def post():
 	username = session['username']
@@ -131,7 +180,7 @@ def post():
 
 @app.route('/logout')
 def logout():
-	session.pop('username')
+	session.pop('email')
 	return redirect('/')
 		
 app.secret_key = 'some key that you will never guess'
