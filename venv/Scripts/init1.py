@@ -36,9 +36,9 @@ def viewflights():
 
 ## Jin Zhou
 #Define route for viewing flights
-@app.route('/viewflights')
+@app.route('/newviewflights')
 def newviewflights():
-	return render_template('viewflights.html')
+	return render_template('newviewflights.html')
 
 #Search flights by source
 @app.route('/flightSearch',methods=['GET','POST'])
@@ -70,7 +70,7 @@ def flightSearch():
 		cursor.execute(query,tuple(source))
 	data = cursor.fetchall()
 	cursor.close()
-	return render_template('viewflights.html', flights=data)
+	return render_template('newviewflights.html', flights=data)
 
 #Search flights by source
 @app.route('/flightBySource', methods=['GET', 'POST'])
