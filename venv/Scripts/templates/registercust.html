@@ -6,8 +6,23 @@
 </head>
 <body>
     <form action="/registerCustAuth" method="POST">
-        <input type="text" name="email" placeholder="email" required /> </br>
-        <input type="password" name="password" placeholder="password" required /></br>
+        Login info:</br>
+        <input type="text" name="email" placeholder="Email address" maxlength="50" required /> </br>
+        <input type="password" name="password" placeholder="Password" required /></br></br>
+        Your full name:</br>
+        <input type="text" name="name" placeholder="Name" maxlength="20" required /></br></br>
+        Address:</br>
+        <input type="text" name="buildingno" placeholder="Building number" maxlength="4" required /></br>
+        <input type="text" name="street" placeholder="Street name" maxlength="20" required /></br>
+        <input type="text" name="city" placeholder="City name" maxlength="20" required /></br>
+        <input type="text" name="state" placeholder="State" maxlength="20" required /></br></br>
+        Phone number:</br>
+        <input type="text" name="phonenumber" placeholder="Phone Number" maxlength="15" required /></br></br>
+        Passport information:</br>
+        <input type="text" name="passportno" placeholder="Number" maxlength="9" required /></br>
+        <input type="date" name="passportexp" required /> (Expiration date)</br>
+        <input type="text" name="passportcountry" placeholder="Country" maxlength="20" required /></br>
+        <input type="date" name="dateofbirth" required /> (Date of birth)</br></br>
         <input type="submit" value=Register />
         {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>

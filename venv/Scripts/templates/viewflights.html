@@ -7,7 +7,7 @@
 <body>
     Search by source </br>
     <form action="/flightBySource" method="POST">
-        <input type="text" name="sourceairport" placeholder="Source airport" required /></br>
+        <input type="text" name="sourceairport" placeholder="Source airport" maxlength="20" required /></br>
         <input type="submit" value=Search />
         {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>
@@ -16,7 +16,7 @@
 
     Search by destination </br>
     <form action="/flightByDest" method="POST">
-        <input type="text" name="destairport" placeholder="Destination airport" required /></br>
+        <input type="text" name="destairport" placeholder="Destination airport" maxlength="20" required /></br>
         <input type="submit" value=Search />
         {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>
@@ -70,7 +70,7 @@
             <td>{{line['airplane_ID']}}</td>
         </tr>
         {% endfor %}
-    </table>
+    </table></br>
 
     <a href="/">Go back</a>
 

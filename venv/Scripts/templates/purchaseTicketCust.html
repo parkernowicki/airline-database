@@ -5,14 +5,23 @@
     </h1>
 </head>
 <body>
-    Welcome, {{customer['name']}} </br></br>
-
-    <!-- Some of these could be displayed on the user's page too... -->
-
-    <a href="/viewflights">Search flights</a>
-    <a href="/purchaseTicketCust">Purchase a ticket</a>
-    <a href="/rateFlight">Rate a flight</a>
-    <a href="/trackSpending">Track my spending</a></br></br>
+    <form action="/purchaseTicketCustAuth" method="POST">
+        Which flight would you like to purchase a ticket for?</br>
+        <input type="text" name="airline" placeholder="Airline name" maxlength="20" required /></br>
+        <input type="text" name="flightno" placeholder="Flight number" maxlength="5" required /></br>
+        <input type="date" name="departdate" required /> (Departure date)</br>
+        <input type="time" name="departtime" required /> (Departure time)</br></br>
+        Payment info:</br>
+        <input type="text" name="cardno" placeholder="Card number" maxlength="16" required /></br>
+        <input type="text" name="cardtype" placeholder="Card type (credit or debit)" maxlength="10" required /></br>
+        <input type="date" name="cardexp" required /> (Expiration date)</br></br>
+        Preferred ticket ID:</br>
+        <input type="text" name="ticketid" placeholder="Ticket ID" maxlength="10" required /></br></br>
+        <input type="submit" value=Purchase />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
 
     <style type="text/css">
         table, th, td {
@@ -22,7 +31,7 @@
         }
     </style>
 
-    My upcoming flights:
+    Available flights:
     <table>
         <th>Airline</th>
         <th>Flight No.</th>
@@ -53,7 +62,7 @@
         {% endfor %}
     </table></br>
 
-    <a href="/logoutemail">Logout</a>
+    <a href="/homecust">Go back</a>
 
 </body>
 

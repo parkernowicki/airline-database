@@ -6,8 +6,16 @@
 </head>
 <body>
 	<form action="/registerStaffAuth" method="POST">
-		<input type="text" name="username" placeholder="username" required /> </br>
-		<input type="password" name="password" placeholder="password" required /></br>
+		Login info:</br>
+		<input type="text" name="username" placeholder="Username" maxlength="10" required /> </br>
+		<input type="password" name="password" placeholder="Password" required /></br></br>
+		Your full name:</br>
+		<input type="text" name="firstname" placeholder="First name" maxlength="20" required /></br>
+		<input type="text" name="lastname" placeholder="Last name" maxlength="20" required /></br></br>
+		Date of birth:</br>
+		<input type="date" name="dateofbirth" required /></br></br>
+		Name of airline:</br>
+		<input type="text" name="airline" placeholder="Airline" maxlength="20" required /></br></br>
 		<input type="submit" value=Register />
 		{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>
