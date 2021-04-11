@@ -1,4 +1,4 @@
-'Hello'
+
 #Import Flask Library
 from flask import Flask, render_template, request, session, url_for, redirect
 import pymysql.cursors
@@ -31,6 +31,44 @@ def viewflights():
 	#stores the results in a variable
 	data = cursor.fetchall()
 	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('viewflights.html', flights=data)
+
+## Jin Zhou
+#Define route for viewing flights
+@app.route('/viewflights')
+def newviewflights():
+	return render_template('viewflights.html')
+
+#Search flights by source
+@app.route('/flightSearch',methods=['GET','POST'])
+def flightSearch():
+	s_airport = request.form['sourceairport']
+	d_airport = request.form['destairport']
+	date = request.form['departdate']
+	source = []
+	if s_airport == '':
+		depart = ''
+	else:
+		source.append(s_airport)
+		depart = 'depart_airport = %s AND'
+	if d_airport == '':
+		arrive = ''
+	else:
+		source.append[d_airport]
+		arrive = 'arrive_airport = %s AND'
+	if date == '':
+		time = ''
+	else:
+		source.append[date]
+		time = 'depart_date = %s AND'
+	query = 'SELECT * FROM flight WHERE '+depart + arrive + time + '(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
+	cursor = conn.cursor()
+	if len(source) == 0:
+		cursor.execute(query)
+	else:
+		cursor.execute(query,tuple(source))
+	data = cursor.fetchall()
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
 
@@ -112,10 +150,11 @@ def loginCustAuth():
 def loginAgentAuth():
 	email = request.form['email']
 	password = request.form['password']
+	agentid = request.form['agentID']
 
 	cursor = conn.cursor()
-	query = 'SELECT * FROM bookingagent WHERE email = %s and password = MD5(%s)'
-	cursor.execute(query, (email, password))
+	query = 'SELECT * FROM bookingagent WHERE email = %s and password = MD5(%s) and booking_agent_ID = %s'
+	cursor.execute(query, (email, password, agentid))
 	data = cursor.fetchone()
 	cursor.close()
 	error = None
@@ -322,7 +361,6 @@ def registerCustAuth():
 def registerAgentAuth():
 	email = request.form['email']
 	password = request.form['password']
-	agentid = request.form['agentid']
 
 	cursor = conn.cursor()
 	query = 'SELECT * FROM bookingagent WHERE email = %s'
@@ -334,7 +372,11 @@ def registerAgentAuth():
 		return render_template('registeragent.html', error=error)
 	else:
 		ins = 'INSERT INTO bookingagent VALUES(%s, MD5(%s), %s, 0.00)'
-		cursor.execute(ins, (email, password, agentid))
+		idquery = 'SELECT max(booking_agent_ID) FROM bookingagent'
+		cursor.execute(idquery)
+		id = cursor.fetchone()
+		id = str(int(id['max(booking_agent_ID)']) + 1)
+		cursor.execute(ins, (email, password, id.zfill(5)))
 		conn.commit()
 		cursor.close()
 		session['email'] = email
