@@ -34,78 +34,40 @@ def viewflights():
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
 
-## Jin Zhou
-#Define route for viewing flights
-@app.route('/newviewflights')
-def newviewflights():
-	return render_template('newviewflights.html')
-
 #Search flights by source
 @app.route('/flightSearch',methods=['GET','POST'])
 def flightSearch():
-	s_airport = request.form['sourceairport']
-	d_airport = request.form['destairport']
-	date = request.form['departdate']
-	source = []
-	if s_airport == '':
-		depart = ''
+	sourceairport = request.form['sourceairport']
+	destairport = request.form['destairport']
+	departdate = request.form['departdate']
+	returndate = request.form['returndate']
+	flightsearch = []
+	if sourceairport == '':
+		depart_q = ''
 	else:
-		source.append(s_airport)
-		depart = 'depart_airport = %s AND'
-	if d_airport == '':
-		arrive = ''
+		flightsearch.append(sourceairport)
+		depart_q = 'depart_airport = %s AND '
+	if destairport == '':
+		arrive_q = ''
 	else:
-		source.append[d_airport]
-		arrive = 'arrive_airport = %s AND'
-	if date == '':
-		time = ''
+		flightsearch.append(destairport)
+		arrive_q = 'arrive_airport = %s AND '
+	if departdate == '':
+		ddate_q = ''
 	else:
-		source.append[date]
-		time = 'depart_date = %s AND'
-	query = 'SELECT * FROM flight WHERE '+depart + arrive + time + '(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
+		flightsearch.append(departdate)
+		ddate_q = 'depart_date = %s AND '
 	cursor = conn.cursor()
-	if len(source) == 0:
-		cursor.execute(query)
-	else:
-		cursor.execute(query,tuple(source))
+	query = 'SELECT * FROM flight WHERE ' + depart_q + arrive_q + ddate_q + '(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
+	cursor.execute(query, tuple(flightsearch))
 	data = cursor.fetchall()
-	cursor.close()
-	return render_template('newviewflights.html', flights=data)
-
-#Search flights by source
-@app.route('/flightBySource', methods=['GET', 'POST'])
-def flightBySource():
-	#grabs information from the forms
-	airport = request.form['sourceairport']
-
-	cursor = conn.cursor()
-	query = 'SELECT * FROM flight WHERE depart_airport = %s AND (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
-	cursor.execute(query, (airport))
-	data = cursor.fetchall()
-	cursor.close()
-	return render_template('viewflights.html', flights=data)
-
-#Search flights by destination
-@app.route('/flightByDest', methods=['GET', 'POST'])
-def flightByDest():
-	airport = request.form['destairport']
-
-	cursor = conn.cursor()
-	query = 'SELECT * FROM flight WHERE arrive_airport = %s AND (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
-	cursor.execute(query, (airport))
-	data = cursor.fetchall()
-	cursor.close()
-	return render_template('viewflights.html', flights=data)
-
-#Search flights by date
-@app.route('/flightByDate', methods=['GET', 'POST'])
-def flightByDate():
-	date = request.form['departdate']
-
-	cursor = conn.cursor()
-	query = 'SELECT * FROM flight WHERE depart_date = %s AND (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
-	cursor.execute(query, (date))
-	data = cursor.fetchall()
+	#round-trip
+	if returndate != '' and sourceairport != '' and destairport != '' and departdate != '' and returndate > departdate:
+		flightsearch[0] = destairport
+		flightsearch[1] = sourceairport
+		flightsearch[2] = returndate
+		cursor.execute(query, tuple(flightsearch))
+		data += cursor.fetchall()
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
 
@@ -150,11 +112,10 @@ def loginCustAuth():
 def loginAgentAuth():
 	email = request.form['email']
 	password = request.form['password']
-	agentid = request.form['agentID']
 
 	cursor = conn.cursor()
-	query = 'SELECT * FROM bookingagent WHERE email = %s and password = MD5(%s) and booking_agent_ID = %s'
-	cursor.execute(query, (email, password, agentid))
+	query = 'SELECT * FROM bookingagent WHERE email = %s and password = MD5(%s)'
+	cursor.execute(query, (email, password))
 	data = cursor.fetchone()
 	cursor.close()
 	error = None
@@ -230,15 +191,16 @@ def purchaseTicketCustAuth():
 	cardno = request.form['cardno']
 	cardtype = request.form['cardtype']
 	cardexp = request.form['cardexp']
-	ticketid = request.form['ticketid']
 
 	cursor = conn.cursor()
-	query = 'SELECT * FROM ticket WHERE ID = %s'
-	cursor.execute(query, (ticketid))
-	ticketexists = cursor.fetchone()
+	query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
+				(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))
+			"""
+	cursor.execute(query, (airline, flightno, departdate, departtime))
+	flightexists = cursor.fetchone()
 
-	query = """
-				SELECT *
+	query = """SELECT
+					ticketCount
 				FROM
 					flight
 					NATURAL JOIN(
@@ -248,37 +210,57 @@ def purchaseTicketCustAuth():
 						ticket
 					GROUP BY
 						airline_name, depart_date, depart_time, flight_num
-					) AS ticketsPerFlight,
-					airplane
+					) AS ticketsPerFlight
 				WHERE
-					flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s AND
-					flight.airline_name = airplane.airline_name AND flight.airplane_ID = airplane.airplane_ID AND airplane.seat_amount = ticketsPerFlight.ticketCount
+					flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s
 			"""
 	cursor.execute(query, (airline, flightno, departdate, departtime))
-	seatsfull = cursor.fetchone()
+	flightticketsresult = cursor.fetchone()
+	if (flightticketsresult is None):
+		flighttickets = 0
+	else:
+		flighttickets = flightticketsresult['ticketCount']
+
+	query = """
+				SELECT
+					seat_amount
+				FROM
+					flight NATURAL JOIN airplane
+				WHERE
+					flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s
+			"""
+	cursor.execute(query, (airline, flightno, departdate, departtime))
+	seatamount = cursor.fetchone()
 
 	query = 'SELECT name FROM customer WHERE email = %s'
 	cursor.execute(query, (session['email']))
-	name = cursor.fetchone()
+	name = cursor.fetchone()['name']
 
-	query = 'SELECT name FROM customer WHERE email = %s'
-	cursor.execute(query, (session['email']))
-	name = cursor.fetchone()
+	query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+	cursor.execute(query)
+	data = cursor.fetchall()
 
 	error = None
-	if(ticketexists):
-		error = "Existing ticket; try another ID"
+	if(not flightexists):
+		error = "Flight does not exist or has already departed, please reenter flight information"
 		cursor.close()
-		return render_template('purchaseTicketCust.html', error=error)
-	elif(seatsfull):
+		return render_template('purchaseTicketCust.html', flights=data, error=error)
+	elif(flighttickets >= seatamount['seat_amount']):
 		error = "Seats are filled for that flight"
 		cursor.close()
-		return render_template('purchaseTicketCust.html', error=error)
+		return render_template('purchaseTicketCust.html', flights=data, error=error)
 	else:
-		soldprice = 40.00 #fixing this later
-		ins = 'INSERT INTO ticket VALUES(%s, 40.00, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
-		cursor.execute(ins, (ticketid, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
+		if (flighttickets >= float(seatamount['seat_amount']) * 0.7):
+			ticketprice = flightexists['base_price'] * 1.2
+		else:
+			ticketprice = flightexists['base_price']
+		ticketid = str(cursor.execute('SELECT max(id) from ticket') + 1)
+		ticketid.zfill(10)
+		ins = 'INSERT INTO ticket VALUES(%s, %.2f, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
+		cursor.execute(ins, (ticketid, ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
 		conn.commit()
+		purchase_insert = 'INSERT INTO cust_purchases VALUES(%s, %s, NULL)'
+		cursor.execute(purchase_insert,(ticketid, session['email']))
 		cursor.close()
 		return redirect(url_for('homecust'))
 
@@ -347,7 +329,6 @@ def registerCustAuth():
 		error = "Existing customer; try another email address"
 		return render_template('registercust.html', error=error)
 	else:
-		#Might want to require these NULL attributes to be filled out later...
 		ins = 'INSERT INTO customer VALUES(%s, %s, MD5(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 		cursor.execute(ins, (email, name, password, buildingno, street, city, state,
 								phonenumber, passportno, passportexp, passportcountry, dateofbirth))

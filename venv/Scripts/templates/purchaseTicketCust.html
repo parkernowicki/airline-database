@@ -15,8 +15,6 @@
         <input type="text" name="cardno" placeholder="Card number" maxlength="16" required /></br>
         <input type="text" name="cardtype" placeholder="Card type (credit or debit)" maxlength="10" required /></br>
         <input type="date" name="cardexp" required /> (Expiration date)</br></br>
-        Preferred ticket ID:</br>
-        <input type="text" name="ticketid" placeholder="Ticket ID" maxlength="10" required /></br></br>
         <input type="submit" value=Purchase />
         {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>
