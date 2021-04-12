@@ -254,13 +254,15 @@ def purchaseTicketCustAuth():
 			ticketprice = flightexists['base_price'] * 1.2
 		else:
 			ticketprice = flightexists['base_price']
-		ticketid = str(cursor.execute('SELECT max(id) from ticket') + 1)
-		ticketid.zfill(10)
+		cursor.execute('SELECT MAX(ID) FROM ticket')
+		ticketid = cursor.fetchone()
+		ticketid = str(int(ticketid['MAX(ID)']) + 1)
 		ins = 'INSERT INTO ticket VALUES(%s, %.2f, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
-		cursor.execute(ins, (ticketid, ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
+		cursor.execute(ins, (ticketid.zfill(10), ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
 		conn.commit()
 		purchase_insert = 'INSERT INTO cust_purchases VALUES(%s, %s, NULL)'
 		cursor.execute(purchase_insert,(ticketid, session['email']))
+		conn.commit()
 		cursor.close()
 		return redirect(url_for('homecust'))
 
@@ -356,7 +358,7 @@ def registerAgentAuth():
 		idquery = 'SELECT max(booking_agent_ID) FROM bookingagent'
 		cursor.execute(idquery)
 		id = cursor.fetchone()
-		id = str(int(id['max(booking_agent_ID)']) + 1)
+		id = str(int(id['MAX(booking_agent_ID)']) + 1)
 		cursor.execute(ins, (email, password, id.zfill(5)))
 		conn.commit()
 		cursor.close()
