@@ -1,0 +1,68 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+    <form action="/purchaseTicketAgentAuth" method="POST">
+        Which flight would you like to purchase a ticket for?</br>
+        <input type="text" name="airline" placeholder="Airline name" maxlength="20" required /></br>
+        <input type="text" name="flightno" placeholder="Flight number" maxlength="5" required /></br>
+        <input type="date" name="departdate" required /> (Departure date)</br>
+        <input type="time" name="departtime" required /> (Departure time)</br></br>
+        Customer/Payment info:</br>
+        <input type="text" name="custemail" placeholder="Customer Email" maxlength="50" required></br>
+        <input type="text" name="cardno" placeholder="Card number" maxlength="16" required /></br>
+        <input type="text" name="cardtype" placeholder="Card type (credit or debit)" maxlength="10" required /></br>
+        <input type="date" name="cardexp" required /> (Expiration date)</br></br>
+        <input type="submit" value=Purchase />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    Available flights:
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
+    <a href="/homeagent">Go back</a>
+
+</body>
+
+</html>
