@@ -1,0 +1,75 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+    <form action="/rateFlightAuth" method="POST">
+        Specify a flight to leave a rating for:</br>
+        <input type="text" name="airline" placeholder="Airline name" maxlength="20" required /></br>
+        <input type="text" name="flightno" placeholder="Flight number" maxlength="5" required /></br>
+        <input type="date" name="departdate" required /> (Departure date)</br>
+        <input type="time" name="departtime" required /> (Departure time)</br></br>
+        Rate and comment:</br>
+        <input type="radio" id="one" name="rating" value="one" required>
+        <label for="one">1 star</label></br>
+        <input type="radio" id="two" name="rating" value="two" required>
+        <label for="two">2 stars</label></br>
+        <input type="radio" id="three" name="rating" value="three" required>
+        <label for="three">3 stars</label></br>
+        <input type="radio" id="four" name="rating" value="four" required>
+        <label for="four">4 stars</label></br>
+        <input type="radio" id="five" name="rating" value="five" required>
+        <label for="five">5 stars</label></br></br>
+        <textarea rows="8" cols="80" name="comment" placeholder="Leave comment here" maxlength="300" required></textarea></br></br>
+        <input type="submit" value=Rate />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    My past flights:
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
+    <a href="/homecust">Go back</a>
+
+</body>
+
+</html>

@@ -34,7 +34,7 @@ def viewflights():
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
 
-#Search flights by source
+#Search flights
 @app.route('/flightSearch',methods=['GET','POST'])
 def flightSearch():
 	sourceairport = request.form['sourceairport']
@@ -180,7 +180,7 @@ def purchaseTicketCust():
     cursor.close()
     return render_template('purchaseTicketCust.html', flights=data)
 
-#Authenticates customer ticket purchase, doesnt work quite yet...
+#Authenticates customer ticket purchase
 @app.route('/purchaseTicketCustAuth', methods=['GET', 'POST'])
 def purchaseTicketCustAuth():
 
@@ -264,6 +264,69 @@ def purchaseTicketCustAuth():
 		conn.commit()
 		purchase_insert = 'INSERT INTO cust_purchases VALUES(%s, %s, NULL)'
 		cursor.execute(purchase_insert,(ticketid.zfill(10), session['email']))
+		conn.commit()
+		cursor.close()
+		return redirect(url_for('homecust'))
+
+#Customer can leave a review for a flight
+@app.route('/rateFlight')
+def rateFlight():
+
+	cursor = conn.cursor()
+	query = """
+			SELECT DISTINCT
+				flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time, flight.arrive_date, flight.arrive_time,
+				flight.flight_status, flight.base_price, flight.depart_airport, flight.arrive_airport, flight.airplane_ID
+			FROM
+				customer, cust_purchases, ticket NATURAL JOIN flight
+			WHERE
+				customer.email = %s AND customer.email = cust_purchases.cust_email AND cust_purchases.ticket_ID = ticket.ID AND
+				(flight.depart_date < CURRENT_DATE() OR (flight.depart_date = CURRENT_DATE() AND flight.depart_time < CURRENT_TIME()))
+			"""
+	cursor.execute(query, session['email'])
+	flightdata = cursor.fetchall()
+	cursor.close()
+	return render_template('rateFlight.html', flights=flightdata)
+
+#Authenticates flight review
+@app.route('/rateFlightAuth', methods=['GET', 'POST'])
+def rateFlightAuth():
+	airline = request.form['airline']
+	flightno = request.form['flightno']
+	departdate = request.form['departdate']
+	departtime = request.form['departtime']
+	comment = request.form['comment']
+	rating = request.form['rating']
+	if rating == 'one':
+		numrating = 1
+	elif rating == 'two':
+		numrating = 2
+	elif rating == 'three':
+		numrating = 3
+	elif rating == 'four':
+		numrating = 4
+	elif rating == 'five':
+		numrating = 5
+
+	cursor = conn.cursor()
+	query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
+				(depart_date < CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time < CURRENT_TIME()))
+			"""
+	cursor.execute(query, (airline, flightno, departdate, departtime))
+	flightexists = cursor.fetchone()
+
+	query = 'SELECT * FROM flight WHERE depart_date < CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time < CURRENT_TIME())'
+	cursor.execute(query)
+	data = cursor.fetchall()
+
+	error = None
+	if(not flightexists):
+		error = "Not a previously flown flight, please reenter flight information"
+		cursor.close()
+		return render_template('rateFlight.html', flights=data, error=error)
+	else:
+		ins = 'INSERT INTO review VALUES(%s, %s, %s, %s, %s, %s, %s)'
+		cursor.execute(ins, (session['email'], airline, flightno, departdate, departtime, comment, numrating))
 		conn.commit()
 		cursor.close()
 		return redirect(url_for('homecust'))
