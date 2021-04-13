@@ -9,11 +9,14 @@
 
     <!-- Some of these could be displayed on the user's page too... -->
 
-    <a href="/myFlightsAgent">My flights</a>
     <a href="/viewflights">Search flights</a>
     <a href="/purchaseTicketAgent">Purchase a ticket</a>
-    <a href="/viewCommission">View my commission</a>
-    <a href="/topCustomers">View my top customers</a>
+    <a href="/topCustomers">View my top customers</a> </br></br>
+
+    Tickets Booked: {{bookingagent['ticketBooked']}}</br>
+    Average Commission: ${{bookingagent['commission']/bookingagent['ticketBooked']}}</br>
+    Commssion in last 30 days: ${{commission}}
+
 
     </br></br><a href="/logoutemail">Logout</a>
 
