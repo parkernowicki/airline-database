@@ -334,14 +334,122 @@ def rateFlightAuth():
 #Home page for agent
 @app.route('/homeagent')
 def homeagent():
-
     email = session['email']
     cursor = conn.cursor()
     query = 'SELECT * FROM bookingagent WHERE email = %s'
     cursor.execute(query, (email))
-    data = cursor.fetchone() 
+    data = cursor.fetchone()
+    query = """SELECT sum(sold_price *.1) as sum
+               FROM cust_purchases c, ticket t
+               WHERE c.ticket_ID = t.ID AND DATEDIFF( CURRENT_DATE(),t.purchase_date) <= 30 AND email = %s"""
+    cursor.execute(query,(email))
+    commission = round(cursor.fetchone()['sum'],2)
     cursor.close()
-    return render_template('homeagent.html', bookingagent=data)
+    return render_template('homeagent.html', bookingagent=data,commission = commission)
+
+# Agent ticket purchasing
+@app.route('/purchaseTicketAgent', )
+def purchaseTicketAgent():
+    cursor = conn.cursor()
+    query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+    return render_template('purchaseTicketAgent.html', flights=data)
+
+
+# Authenticates customer ticket purchase
+@app.route('/purchaseTicketAgentAuth', methods=['GET', 'POST'])
+def purchaseTicketAgentAuth():
+
+    airline = request.form['airline']
+    flightno = request.form['flightno']
+    departdate = request.form['departdate']
+    departtime = request.form['departtime']
+    custEmail = request.form["custemail"]
+    cardno = request.form['cardno']
+    cardtype = request.form['cardtype']
+    cardexp = request.form['cardexp']
+
+    cursor = conn.cursor()
+    query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
+                (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))
+            """
+    cursor.execute(query, (airline, flightno, departdate, departtime))
+    flightexists = cursor.fetchone()
+
+    query = """SELECT
+                    ticketCount
+                FROM
+                    flight
+                    NATURAL JOIN(
+                    SELECT
+                        airline_name, depart_date, depart_time, flight_num, COUNT(ID) AS ticketCount
+                    FROM
+                        ticket
+                    GROUP BY
+                        airline_name, depart_date, depart_time, flight_num
+                    ) AS ticketsPerFlight
+                WHERE
+                    flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s
+            """
+    cursor.execute(query, (airline, flightno, departdate, departtime))
+    flightticketsresult = cursor.fetchone()
+    if (flightticketsresult is None):
+        flighttickets = 0
+    else:
+        flighttickets = flightticketsresult['ticketCount']
+
+    query = """
+                SELECT
+                    seat_amount
+                FROM
+                    flight NATURAL JOIN airplane
+                WHERE
+                    flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s
+            """
+    cursor.execute(query, (airline, flightno, departdate, departtime))
+    seatamount = cursor.fetchone()
+
+    query = 'SELECT name FROM customer WHERE email = %s'
+    cursor.execute(query, (custEmail))
+    name = cursor.fetchone()['name']
+
+    query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    error = None
+    if(not flightexists):
+        error = "Flight does not exist or has already departed, please reenter flight information"
+        cursor.close()
+        return render_template('purchaseTicketAgent.html', flights=data, error=error)
+    elif(flighttickets >= seatamount['seat_amount']):
+        error = "Seats are filled for that flight"
+        cursor.close()
+        return render_template('purchaseTicketAgent.html', flights=data, error=error)
+    else:
+        if (flighttickets >= float(seatamount['seat_amount']) * 0.7):
+            ticketprice = flightexists['base_price'] * 1.2
+        else:
+            ticketprice = flightexists['base_price']
+        cursor.execute('SELECT MAX(ID) FROM ticket')
+        ticketid = cursor.fetchone()
+        ticketid = str(int(ticketid['MAX(ID)']) + 1)
+        ins = 'INSERT INTO ticket VALUES(%s, %s, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
+        cursor.execute(ins, (ticketid.zfill(10), ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
+        conn.commit()
+        purchase_insert = 'INSERT INTO cust_purchases VALUES(%s, %s, %s)'
+        cursor.execute(purchase_insert,(ticketid.zfill(10),custEmail, session['email']))
+        conn.commit()
+        update = """UPDATE bookingagent
+                    SET ticketBooked= ticketBooked + 1, commission= commission + %s*.1
+                    WHERE email = %s"""
+        cursor.execute(update,(ticketprice,session['email']))
+        conn.commit()
+        cursor.close()
+        return redirect(url_for('homeagent'))
+
 
 #Home page for staff
 @app.route('/homestaff')
