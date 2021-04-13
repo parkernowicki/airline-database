@@ -257,11 +257,11 @@ def purchaseTicketCustAuth():
 		cursor.execute('SELECT MAX(ID) FROM ticket')
 		ticketid = cursor.fetchone()
 		ticketid = str(int(ticketid['MAX(ID)']) + 1)
-		ins = 'INSERT INTO ticket VALUES(%s, %.2f, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
+		ins = 'INSERT INTO ticket VALUES(%s, %s, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
 		cursor.execute(ins, (ticketid.zfill(10), ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
 		conn.commit()
 		purchase_insert = 'INSERT INTO cust_purchases VALUES(%s, %s, NULL)'
-		cursor.execute(purchase_insert,(ticketid, session['email']))
+		cursor.execute(purchase_insert,(ticketid.zfill(10), session['email']))
 		conn.commit()
 		cursor.close()
 		return redirect(url_for('homecust'))
