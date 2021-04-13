@@ -1,7 +1,7 @@
 
 #Import Flask Library
 from flask import Flask, render_template, request, session, url_for, redirect
-import pymysql.cursors
+import decimal, pymysql.cursors
 
 #Initialize the app from Flask
 app = Flask(__name__)
@@ -155,7 +155,7 @@ def homecust():
     cursor.execute(query, (email))
     userdata = cursor.fetchone()
     query = """
-			SELECT
+			SELECT DISTINCT
 				flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time, flight.arrive_date, flight.arrive_time,
 				flight.flight_status, flight.base_price, flight.depart_airport, flight.arrive_airport, flight.airplane_ID
 			FROM
@@ -250,12 +250,14 @@ def purchaseTicketCustAuth():
 		cursor.close()
 		return render_template('purchaseTicketCust.html', flights=data, error=error)
 	else:
-		if (flighttickets >= float(seatamount['seat_amount']) * 0.7):
-			ticketprice = flightexists['base_price'] * 1.2
+		if (flighttickets >= seatamount['seat_amount'] * decimal.Decimal('0.7')):
+			ticketprice = flightexists['base_price'] * decimal.Decimal('1.2')
 		else:
 			ticketprice = flightexists['base_price']
 		cursor.execute('SELECT MAX(ID) FROM ticket')
 		ticketid = cursor.fetchone()
+		if ticketid['MAX(ID)'] is None:
+			ticketid['MAX(ID)'] = 0
 		ticketid = str(int(ticketid['MAX(ID)']) + 1)
 		ins = 'INSERT INTO ticket VALUES(%s, %s, %s, %s, %s, %s, CURRENT_DATE(), CURRENT_TIME(), %s, %s, %s, %s)'
 		cursor.execute(ins, (ticketid.zfill(10), ticketprice, cardno, cardtype, cardexp, name, airline, flightno, departdate, departtime))
