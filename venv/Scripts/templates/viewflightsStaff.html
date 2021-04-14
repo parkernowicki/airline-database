@@ -1,0 +1,82 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+ 
+    Search by source </br>
+    <form action="/flightBySourceStaff" method="POST">
+        <input type="text" name="sourceairport" maxlength="20" required /></br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    Search by destination </br>
+    <form action="/flightByDestStaff" method="POST">
+        <input type="text" name="destairport" maxlength="20" required /></br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+    Search by departure date </br>
+    <form action="/flightByDateRange" method="POST">
+        <input type="date" name="departdate" placeholder="yyyy-mm-dd" required /> </br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
+
+ <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+        <th>Passenger List</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+            <td> 
+                <a href = {{ url_for('passengerList' ,airlinename=line['airline_name'], flightnum=line['flight_num'], depdate=line['depart_date'], deptime=line['depart_time'] ) }}> Detail</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

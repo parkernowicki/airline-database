@@ -8,9 +8,9 @@ app = Flask(__name__)
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
-					   port = 3306,
+					   port = 8889,
                        user='root',
-                       password='',
+                       password='root',
                        db='airline',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -70,6 +70,94 @@ def flightSearch():
 		data += cursor.fetchall()
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
+
+####################
+#STAFF VIEW FLIGHTS
+####################
+#Define route for Staff viewing flights
+@app.route('/viewflightsStaff')
+def viewflightsStaff():
+    #cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = '''
+    SELECT flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
+    FROM airlineStaff, flight 
+    WHERE airlineStaff.airline_name = flight.airline_name AND DATEDIFF(depart_date,CURRENT_DATE()) <= 30 AND DATEDIFF(depart_date, CURRENT_DATE()) >= 0
+    '''
+    #default flight view within 30 days
+	cursor.execute(query)
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('viewflightsStaff.html', flights=data)
+
+####################
+#STAFF SEARCH FLIGHTS
+####################
+
+#Search flights by source Staff
+@app.route('/flightBySourceStaff', methods=['GET', 'POST'])
+def flightBySourceStaff():
+	#grabs information from the forms
+	airport = request.form['sourceairport']
+
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = 'SELECT * FROM flight WHERE depart_airport = %s'
+	cursor.execute(query, (airport))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('viewflightsStaff.html', flights=data)
+
+#Search flights by destination
+@app.route('/flightByDestStaff', methods=['GET', 'POST'])
+def flightByDest():
+	airport = request.form['destairport']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE arrive_airport = %s'
+	cursor.execute(query, (airport))
+	data = cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsStaff.html', flights=data)
+
+#Search flights by date
+#maybe add date range later
+@app.route('/flightByDateRange', methods=['GET', 'POST'])
+def flightByDateRange():
+	departdate = request.form['departdate']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE depart_date = %s' 
+	cursor.execute(query, (departdate))
+	data = cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsStaff.html', flights=data)
+
+#Define route for passenger list
+@app.route('/passengerList/<airlinename>/<flightnum>/<depdate>/<deptime>/')
+def passengerList(airlinename, flightnum, depdate, deptime):
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = '''
+    SELECT customer.name
+	FROM customer, cust_purchases, ticket 
+	WHERE customer.email = cust_purchases.cust_email AND cust_purchases.ticket_ID = ticket.ID
+	AND airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s
+	'''
+    #default flight view within 30 days
+	cursor.execute(query, (airlinename, flightnum, depdate, deptime))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('passengerList.html', passenger = data)
 
 #Define route for customer login
 @app.route('/logincust')
