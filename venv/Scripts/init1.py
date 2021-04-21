@@ -8,9 +8,9 @@ app = Flask(__name__)
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
-					   port = 8889,
+					   port = 3306, #Make sure this matches your database port!
                        user='root',
-                       password='root',
+                       password='', #Make sure this matches too
                        db='airline',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -366,10 +366,10 @@ def rateFlight():
 				flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time, flight.arrive_date, flight.arrive_time,
 				flight.flight_status, flight.base_price, flight.depart_airport, flight.arrive_airport, flight.airplane_ID
 			FROM
-				customer, cust_purchases, ticket NATURAL JOIN flight
+				cust_purchases, ticket NATURAL JOIN flight
 			WHERE
-				customer.email = %s AND customer.email = cust_purchases.cust_email AND cust_purchases.ticket_ID = ticket.ID AND
-				(flight.depart_date < CURRENT_DATE() OR (flight.depart_date = CURRENT_DATE() AND flight.depart_time < CURRENT_TIME()))
+				cust_email = %s AND cust_purchases.ticket_ID = ticket.ID AND
+				(flight.arrive_date < CURRENT_DATE() OR (flight.arrive_date = CURRENT_DATE() AND flight.arrive_time < CURRENT_TIME()))
 			"""
 	cursor.execute(query, session['email'])
 	flightdata = cursor.fetchall()
@@ -397,27 +397,113 @@ def rateFlightAuth():
 		numrating = 5
 
 	cursor = conn.cursor()
-	query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
-				(depart_date < CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time < CURRENT_TIME()))
+	query = """
+			SELECT
+				*
+			FROM
+				cust_purchases, ticket NATURAL JOIN flight
+			WHERE
+				cust_email = %s AND cust_purchases.ticket_ID = ticket.ID AND
+				flight.airline_name = %s AND flight.flight_num = %s AND flight.depart_date = %s AND flight.depart_time = %s AND
+				(flight.arrive_date < CURRENT_DATE() OR (flight.arrive_date = CURRENT_DATE() AND flight.arrive_time < CURRENT_TIME()))
 			"""
-	cursor.execute(query, (airline, flightno, departdate, departtime))
+	cursor.execute(query, (session['email'], airline, flightno, departdate, departtime))
 	flightexists = cursor.fetchone()
 
-	query = 'SELECT * FROM flight WHERE depart_date < CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time < CURRENT_TIME())'
-	cursor.execute(query)
-	data = cursor.fetchall()
+	query = """
+			SELECT DISTINCT
+				flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time, flight.arrive_date, flight.arrive_time,
+				flight.flight_status, flight.base_price, flight.depart_airport, flight.arrive_airport, flight.airplane_ID
+			FROM
+				cust_purchases, ticket NATURAL JOIN flight
+			WHERE
+				cust_email = %s AND cust_purchases.ticket_ID = ticket.ID AND
+				(flight.arrive_date < CURRENT_DATE() OR (flight.arrive_date = CURRENT_DATE() AND flight.arrive_time < CURRENT_TIME()))
+			"""
+	cursor.execute(query, session['email'])
+	flightdata = cursor.fetchall()
 
 	error = None
 	if(not flightexists):
 		error = "Not a previously flown flight, please reenter flight information"
 		cursor.close()
-		return render_template('rateFlight.html', flights=data, error=error)
+		return render_template('rateFlight.html', flights=flightdata, error=error)
 	else:
 		ins = 'INSERT INTO review VALUES(%s, %s, %s, %s, %s, %s, %s)'
 		cursor.execute(ins, (session['email'], airline, flightno, departdate, departtime, comment, numrating))
 		conn.commit()
 		cursor.close()
 		return redirect(url_for('homecust'))
+
+#Customer can track spending history on tickets
+@app.route('/trackSpending')
+def trackSpending():
+
+	cursor = conn.cursor()
+	query = """
+			SELECT
+				SUM(sold_price) AS monthlySpending,
+				MONTHNAME(purchase_date) AS month
+			FROM
+				cust_purchases,
+				ticket
+			WHERE
+				cust_email = %s AND ticket_ID = ID AND purchase_date >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH)
+			GROUP BY
+				MONTH(purchase_date)
+			ORDER BY
+				purchase_date
+			"""
+	cursor.execute(query, session['email'])
+	data = cursor.fetchall()
+	query = """
+			SELECT
+				SUM(sold_price) AS totalSpending
+			FROM
+				cust_purchases, ticket
+			WHERE
+				cust_email = %s AND ticket_ID = ID AND purchase_date >= DATE_ADD(CURRENT_DATE, INTERVAL -1 YEAR)
+			"""
+	cursor.execute(query, session['email'])
+	totalspending = cursor.fetchone()
+	cursor.close()
+	return render_template('trackSpending.html', total=totalspending, data=data)
+
+#Authenticates track spending
+@app.route('/trackSpendingAuth', methods=['GET', 'POST'])
+def trackSpendingAuth():
+	rangebegin = request.form['rangebegin']
+	rangeend = request.form['rangeend']
+
+	cursor = conn.cursor()
+	query = """
+			SELECT
+				SUM(sold_price) AS monthlySpending,
+				MONTHNAME(purchase_date) AS month
+			FROM
+				cust_purchases,
+				ticket
+			WHERE
+				cust_email = %s AND ticket_ID = ID AND purchase_date >= %s AND purchase_date <= %s
+			GROUP BY
+				MONTH(purchase_date)
+			ORDER BY
+				purchase_date
+			"""
+	cursor.execute(query, (session['email'], rangebegin, rangeend))
+	data = cursor.fetchall()
+	query = """
+			SELECT
+				SUM(sold_price) AS totalSpending
+			FROM
+				cust_purchases, ticket
+			WHERE
+				cust_email = %s AND ticket_ID = ID AND purchase_date >= %s AND purchase_date <= %s
+			"""
+	cursor.execute(query, (session['email'], rangebegin, rangeend))
+	totalspending = cursor.fetchone()
+	cursor.close()
+	return render_template('trackSpending.html', total=totalspending, data=data)
 
 #Home page for agent
 @app.route('/homeagent')
