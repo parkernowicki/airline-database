@@ -146,7 +146,7 @@ def passengerList(airlinename, flightnum, depdate, deptime):
 	cursor = conn.cursor()
 	#executes query
 	query = '''
-    SELECT customer.name
+    SELECT name, phone_number, passport_number, passport_expiration
 	FROM customer, cust_purchases, ticket 
 	WHERE customer.email = cust_purchases.cust_email AND cust_purchases.ticket_ID = ticket.ID
 	AND airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s
@@ -155,9 +155,154 @@ def passengerList(airlinename, flightnum, depdate, deptime):
 	cursor.execute(query, (airlinename, flightnum, depdate, deptime))
 	#stores the results in a variable
 	data = cursor.fetchall()
+	for each in data:
+		print(each['name'])
 	#use fetchall() if you are expecting more than 1 data row
 	cursor.close()
 	return render_template('passengerList.html', passenger = data)
+
+#Define route for adding flight
+@app.route('/addFlight')
+def addFlight():
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = '''
+    SELECT flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
+    FROM airlineStaff, flight 
+    WHERE airlineStaff.airline_name = flight.airline_name AND DATEDIFF(depart_date,CURRENT_DATE()) <= 30 AND DATEDIFF(depart_date, CURRENT_DATE()) >= 0
+    '''
+    #default flight view within 30 days
+	cursor.execute(query)
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('addFlight.html', flights = data)
+
+#Define route for adding Flights form
+@app.route('/addFlightProc', methods=['GET', 'POST'])
+def addFlightProc():
+	#edit so that airline, airplaneID, depairp and arrairp must exist
+	#add default value
+	airline = request.form['airline']
+	flightnum = request.form['flightnum']
+	depdate = request.form['depdate']
+	deptime = request.form['deptime']
+	arrdate = request.form['arrdate']
+	arrtime = request.form['arrtime']
+	status = request.form['status']
+	price = request.form['price']
+	depairp = request.form['depairp']
+	arrairp = request.form['arrairp']
+	airplaneID = request.form['airplaneID']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s'
+	cursor.execute(query, (airline, flightnum, depdate, deptime))
+	data = cursor.fetchone()
+	
+	error = None
+
+	if(data):
+		#returns an error message to the html page
+		error = 'Flight already exists'
+		return render_template('addFlight.html', error=error)
+	else:
+		ins = 'INSERT INTO flight VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+		cursor.execute(ins, (airline, flightnum, depdate, deptime, arrdate, arrtime, status, price, depairp, arrairp, airplaneID))
+		conn.commit()
+		cursor.close()
+		return render_template('addFlight.html')
+	
+#Define route for change flight status
+@app.route('/flightStatus')
+def flightStatus():
+	return render_template('flightStatus.html')
+
+#Define route for change flight status form
+@app.route('/flightStatusProc', methods=['GET', 'POST'])
+def flightStatusProc():
+	airline = request.form['airline']
+	flightnum = request.form['flightnum']
+	depdate = request.form['depdate']
+	deptime = request.form['deptime']
+	status = request.form['status']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s'
+	cursor.execute(query, (airline, flightnum, depdate, deptime))
+	data = cursor.fetchone()
+	
+	error = None
+
+	if (data):
+		upd = """
+		UPDATE flight SET flight_status = %s
+		WHERE airline_name = %s AND flight_num = %s
+		AND depart_date = %s AND depart_time = %s
+		"""
+		cursor.execute(upd, (status, airline, flightnum, depdate, deptime))
+		conn.commit()
+		cursor.close()
+		return render_template('flightStatus.html')
+	else:
+		#returns an error message to the html page
+		error = 'Flight does not exist'
+		return render_template('flightStatus.html', error=error)
+
+	return render_template('flightStatus.html')
+
+#Define route for adding new plane
+@app.route('/addPlane')
+def addPlane():
+	return render_template('addPlane.html')
+
+#Define route for adding new plane form
+@app.route('/addPlaneProc', methods=['GET', 'POST'])
+def addPlaneProc():
+	airline = request.form['airline']
+	airplaneID = request.form['airplaneID']
+	seat = request.form['seat']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM airplane WHERE airline_name = %s AND airplane_ID = %s'
+	cursor.execute(query, (airline, airplaneID))
+	data = cursor.fetchone()
+	
+	error = None
+
+	if (data):
+		#returns an error message to the html page
+		error = 'Airplane ID already exist'
+		return render_template('addPlane.html', error=error)
+	else:
+		ins = 'INSERT INTO airplane VALUES(%s, %s, %s)'
+		cursor.execute(ins, (airline, airplaneID, seat))
+		conn.commit()
+		cursor.close()
+		return redirect(url_for('addPlaneConfirm', airlinename=airline, airplaneID=airplaneID))
+	return render_template('addPlane.html')
+
+#Define route for add plane confirmation
+@app.route('/addPlaneConfirm/<airlinename>/<airplaneID>/')
+def addPlaneConfirm(airlinename, airplaneID):
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = '''
+    SELECT *
+	FROM airplane
+	WHERE airline_name = %s
+	'''
+    #default flight view within 30 days
+	cursor.execute(query, (airlinename))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('addPlaneConfirm.html', plane = data, airplaneID = airplaneID)
+
 
 #Define route for customer login
 @app.route('/logincust')

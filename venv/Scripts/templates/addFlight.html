@@ -1,0 +1,87 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+    <h2>
+        Add new flight
+    </h2>
+    
+<body>
+    <b>Upcoming flights</b>
+
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
+
+    <form action="/addFlightProc" method="POST">
+        Airline name:</br>
+		<input type="text" name="airline" placeholder="Airline" maxlength="20" required /> </br>
+        Flight num:</br>
+        <input type="text" name="flightnum" maxlength="5" required /></br>
+        Depart date:</br>
+        <input type="date" name="depdate" placeholder="yyyy-mm-dd" required /></br></br>
+        Depart time:</br>
+        <input type="time" name="deptime" placeholder="00:00:00" required /></br></br>
+        Arrive date:</br>
+        <input type="date" name="arrdate" placeholder="yyyy-mm-dd" required /></br></br>
+        Arrive time:</br>
+        <input type="time" name="arrtime" placeholder="00:00:00" required /></br></br>
+        Flight status:</br>
+        <input type="time" name="status" placeholder="on-time, delayed, cancel" required /></br></br>
+        Base price:</br>
+        <input type="number" name="price" placeholder="0.00" required /></br></br>
+        Depart Airport:</br>
+        <input type="text" name="depairp" maxlength="20" required /></br></br>
+        Arrive airport:</br>
+        <input type="text" name="arrairp" maxlength="20" required /></br></br>
+        Airplane ID:</br>
+        <input type="text" name="airplaneID" maxlength="5" required /></br></br>
+        <input type="submit" value=Add />
+		{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+		{% endif %}
+	</form>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

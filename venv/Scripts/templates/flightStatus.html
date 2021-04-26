@@ -1,0 +1,38 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+    <h2>
+        Update flight status
+    </h2>
+
+    
+<body>
+
+
+    <form action="/flightStatusProc" method="POST">
+        Airline name:</br>
+		<input type="text" name="airline" placeholder="Airline" maxlength="20" required /> </br>
+        Flight num:</br>
+        <input type="text" name="flightnum" maxlength="5" required /></br>
+        Depart date:</br>
+        <input type="date" name="depdate" placeholder="yyyy-mm-dd" required /></br></br>
+        Depart time:</br>
+        <input type="time" name="deptime" placeholder="00:00:00" required /></br></br>
+        
+        Flight status:</br>
+        <input type="time" name="status" placeholder="on-time, delayed, cancel" required /></br></br>
+        <input type="submit" value=Update />
+		{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+		{% endif %}
+	</form>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

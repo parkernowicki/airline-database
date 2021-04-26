@@ -4,6 +4,9 @@
         NYU Tandon Airline Database System
     </h1>
 </head>
+<h2>
+    Passenger List
+</h2>
 <body>
 
 <style type="text/css">
@@ -22,7 +25,10 @@
 
     {% for line in passenger %}
         <tr>
-            <td>{{line['customer.name']}}</td>
+            <td>{{line['name']}}</td>
+            <td>{{line['phone_number']}}</td>
+            <td>{{line['passport_number']}}</td>
+            <td>{{line['passport_expiration']}}</td>
         </tr>
     {% endfor %}
         
