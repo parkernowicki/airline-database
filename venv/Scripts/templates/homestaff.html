@@ -18,10 +18,43 @@
     <a href="/viewAgents">View booking agents</a>
     <a href="/frequentCustomers">View frequent customers</a>
     <a href="/viewReports">View reports</a>
-    <a href="/compareRevenue">Revenue</a>
-    <a href="/topDestinations">Top destinations</a>
+    <a href="/compareRevenue">Revenue</a></br>
 
-    </br></br><a href="/logoutusername">Logout</a>
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    <h2>Top destinations:</h2>
+    <h3>Last 3 months:</h3>
+    <table>
+        <th>Destination</th>
+        <th>Tickets sold</th>
+
+        {% for line in topdestsmonth %}
+        <tr>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['ticketCount']}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <h3>Last year:</h3>
+    <table>
+        <th>Destination</th>
+        <th>Tickets sold</th>
+
+        {% for line in topdestsyear %}
+        <tr>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['ticketCount']}}</td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
+    <a href="/logoutusername">Logout</a>
 
 </body>
 

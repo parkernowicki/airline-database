@@ -81,7 +81,7 @@ def viewflightsStaff():
 	cursor = conn.cursor()
 	#executes query
 	query = '''
-    SELECT flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
+    SELECT flight.airline_name, flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
     FROM airlineStaff, flight 
     WHERE airlineStaff.airline_name = flight.airline_name AND DATEDIFF(depart_date,CURRENT_DATE()) <= 30 AND DATEDIFF(depart_date, CURRENT_DATE()) >= 0
     '''
@@ -774,13 +774,47 @@ def purchaseTicketAgentAuth():
 @app.route('/homestaff')
 def homestaff():
 
-    username = session['username']
-    cursor = conn.cursor()
-    query = 'SELECT * FROM airlinestaff WHERE username = %s'
-    cursor.execute(query, (username))
-    data = cursor.fetchone() 
-    cursor.close()
-    return render_template('homestaff.html', airlinestaff=data)
+	username = session['username']
+	cursor = conn.cursor()
+	query = 'SELECT * FROM airlinestaff WHERE username = %s'
+	cursor.execute(query, (username))
+	userdata = cursor.fetchone()
+	query = """
+			SELECT DISTINCT
+				arrive_airport,
+				COUNT(*) AS ticketCount
+			FROM
+				ticket NATURAL JOIN flight
+			WHERE
+				purchase_date >= DATE_ADD(CURRENT_DATE, INTERVAL -3 MONTH)
+			GROUP BY
+				arrive_airport
+			ORDER BY
+				ticketCount
+			DESC
+			LIMIT 3
+			"""
+	cursor.execute(query)
+	topdestsmonth = cursor.fetchall()
+	query = """
+			SELECT DISTINCT
+				arrive_airport,
+				COUNT(*) AS ticketCount
+			FROM
+				ticket NATURAL JOIN flight
+			WHERE
+				purchase_date >= DATE_ADD(CURRENT_DATE, INTERVAL -1 YEAR)
+			GROUP BY
+				arrive_airport
+			ORDER BY
+				ticketCount
+			DESC
+			LIMIT 3
+			"""
+	cursor.execute(query)
+	topdestsyear = cursor.fetchall()
+	cursor.close()
+	return render_template('homestaff.html', airlinestaff=userdata, topdestsmonth=topdestsmonth, topdestsyear=topdestsyear)
 
 #Define route to register customer
 @app.route('/registercust')
