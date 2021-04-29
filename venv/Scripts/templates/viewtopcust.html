@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.2.0/chart.min.js"></script>
+</head>
+<body>
+    <center>
+        <h3>{{title1}}</h3>
+    </center>
+    <center>
+        <canvas id="chart" width="300" height="200"></canvas>
+        <script>
+            var mychart = document.getElementById('chart');
+            var myChart = new Chart(mychart, {
+                type: 'bar',
+                data: {
+                    labels: ["{{labels1[0]}}"
+                            {% for item in labels1[1:] %}
+                                ,"{{item}}"
+                                {% endfor %}
+                                ],
+                    datasets: [{
+                        label: 'tickets bought',
+                        data: [{{values1[0]}}
+                            {% for item in values1[1:] %}
+                                ,{{item}}
+                                {% endfor %}
+                                ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                            ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                            }
+                        }
+                    }
+                });
+        </script>
+    </center>
+
+    <center>
+        <h3>{{title2}}</h3>
+    </center>
+    <center>
+        <canvas id="chart1" width="300" height="200"></canvas>
+        <script>
+            var mychart = document.getElementById('chart1');
+            var myChart = new Chart(mychart, {
+                type: 'bar',
+                data: {
+                    labels: ["{{labels2[0]}}"
+                            {% for item in labels2[1:] %}
+                                ,"{{item}}"
+                                {% endfor %}
+                                ],
+                    datasets: [{
+                        label: 'Commission',
+                        data: [{{values2[0]}}
+                            {% for item in values2[1:] %}
+                                ,{{item}}
+                                {% endfor %}
+                                ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                            ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                            ],
+                            borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                            }
+                        }
+                    }
+                });
+        </script>
+    </center>
+
+    <a href="/homeagent">Go back</a>
+</body>
+</html>

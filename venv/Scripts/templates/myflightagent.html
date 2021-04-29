@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+
+     <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    <table>
+        <th>Customer</th>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['name']}}</td>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+        </tr>
+        {% endfor %}
+
+    </table></br></br>
+
+    <a href="/homeagent">Go back</a>
+</body>
+</html>
