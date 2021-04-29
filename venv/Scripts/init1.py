@@ -658,16 +658,90 @@ def homeagent():
     query = 'SELECT * FROM bookingagent WHERE email = %s'
     cursor.execute(query, (email))
     data = cursor.fetchone()
-    query = """SELECT sum(sold_price *.1) as sum
-               FROM cust_purchases c, ticket t
-               WHERE c.ticket_ID = t.ID AND DATEDIFF( CURRENT_DATE(),t.purchase_date) <= 30 AND email = %s"""
-    cursor.execute(query,(email))
-    commission = round(cursor.fetchone()['sum'],2)
     cursor.close()
-    return render_template('homeagent.html', bookingagent=data,commission = commission)
+    return render_template('homeagent.html', bookingagent=data)
+
+
+@app.route('/viewcommission')
+def viewcommission():
+    email = session['email']
+    cursor = conn.cursor()
+    query = """SELECT sum(sold_price *.1) as sum
+                   FROM cust_purchases c, ticket t
+                   WHERE c.ticket_ID = t.ID AND DATEDIFF( CURRENT_DATE(),t.purchase_date) <= 30 AND email = %s"""
+    cursor.execute(query, (email))
+    commission = round(cursor.fetchone()['sum'], 2)
+    query = """SELECT count(t.ID) as count
+                FROM cust_purchases c, ticket t
+                WHERE email = %s AND DATEDIFF(CURRENT_DATE(),t.purchase_date) <= 30 AND c.ticket_ID = t.ID"""
+    cursor.execute(query,(email))
+    tickets = cursor.fetchone()['count']
+    return render_template('viewcommission.html', commission=commission, tickets=tickets)
+
+
+@app.route("/viewmyflightsagent")
+def viewmyflightsagent():
+    cursor = conn.cursor()
+    query = """
+                SELECT DISTINCT
+                    customer.name, flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time, flight.arrive_date, flight.arrive_time,
+                    flight.flight_status, flight.base_price, flight.depart_airport, flight.arrive_airport, flight.airplane_ID
+                FROM
+                    customer, cust_purchases c, ticket NATURAL JOIN flight
+                WHERE
+                    c.email = %s AND c.ticket_ID = ticket.ID AND customer.email = c.cust_email AND
+                    (flight.depart_date > CURRENT_DATE() OR (flight.depart_date = CURRENT_DATE() AND flight.depart_time > CURRENT_TIME()))
+                """
+    cursor.execute(query,(session['email']))
+    data = cursor.fetchall()
+    return render_template('myflightagent.html',flights= data)
+
+
+@app.route('/topCustomers')
+def viewtopcust():
+    cursor= conn.cursor()
+    query = """SELECT customer.name as name, count(ticket_ID) as count
+               FROM cust_purchases c, customer, ticket t 
+               WHERE %s = c.email AND c.cust_email = customer.email AND t.ID = c.ticket_ID AND
+                    TIMESTAMPDIFF(MONTH, t.purchase_date, CURRENT_DATE()) <= 6
+               GROUP BY customer.name
+               ORDER BY count desc"""
+    cursor.execute(query,(session['email']))
+    labelsTicket = []
+    valuesTicket = []
+    count = 0
+    while count < 5:
+        data = cursor.fetchone()
+        if data is None:
+            break
+        labelsTicket.append(data['name'])
+        valuesTicket.append(data['count'])
+        count += 1
+
+    query = """SELECT customer.name as name, sum(sold_price)*.1 as sum
+               FROM cust_purchases c, customer, ticket t
+               WHERE %s = c.email AND c.cust_email = customer.email AND t.ID = c.ticket_ID AND
+                    TIMESTAMPDIFF(YEAR, t.purchase_date, CURRENT_DATE()) <= 1
+               GROUP BY customer.name
+               ORDER BY sum desc"""
+    cursor.execute(query, (session['email']))
+    labelsComm = []
+    valuesComm = []
+    count = 0
+    while count < 5:
+        data = cursor.fetchone()
+        if data is None:
+            break
+        labelsComm.append(data['name'])
+        valuesComm.append(data['sum'])
+        count += 1
+
+    return render_template('viewtopcust.html', labels1= labelsTicket, values1= valuesTicket, title1="Top 5 Customers by tickets",
+                           labels2= labelsComm, values2= valuesComm, title2="Top 5 Customers by commission")
+
 
 # Agent ticket purchasing
-@app.route('/purchaseTicketAgent', )
+@app.route('/purchaseTicketAgent')
 def purchaseTicketAgent():
     cursor = conn.cursor()
     query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
@@ -732,13 +806,18 @@ def purchaseTicketAgentAuth():
 
     query = 'SELECT name FROM customer WHERE email = %s'
     cursor.execute(query, (custEmail))
-    name = cursor.fetchone()['name']
+    name = cursor.fetchone()
 
     query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
     cursor.execute(query)
     data = cursor.fetchall()
 
-    error = None
+    if (not name):
+        error = "Customer does not exist"
+        cursor.close()
+        return render_template('purchaseTicketAgent.html', flights=data, error=error)
+    name = name['name']
+
     if(not flightexists):
         error = "Flight does not exist or has already departed, please reenter flight information"
         cursor.close()
@@ -762,7 +841,7 @@ def purchaseTicketAgentAuth():
         cursor.execute(purchase_insert,(ticketid.zfill(10),custEmail, session['email']))
         conn.commit()
         update = """UPDATE bookingagent
-                    SET ticketBooked= ticketBooked + 1, commission= commission + %s*.1
+                    SET commission= commission + %s*.1
                     WHERE email = %s"""
         cursor.execute(update,(ticketprice,session['email']))
         conn.commit()
@@ -918,16 +997,21 @@ def registerStaffAuth():
 		return redirect(url_for('homestaff'))
 
 #Logout for customers and agents
-@app.route('/logoutemail')
-def logoutemail():
-	session.pop('email')
-	return redirect('/')
+@app.route('/logoutCust')
+def logoutCust():
+    session.pop('email')
+    return redirect('/logincust')
+
+@app.route('/logoutAgent')
+def logoutAgent():
+    session.pop('email')
+    return redirect('/loginagent')
 
 #Logout for staff
 @app.route('/logoutusername')
 def logoutusername():
-	session.pop('username')
-	return redirect('/')
+    session.pop('username')
+    return redirect('/loginstaff')
 		
 app.secret_key = 'some key that you will never guess'
 #Run the app on localhost port 5000
