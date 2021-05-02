@@ -1,0 +1,32 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+    <h2>
+        Add new airport
+    </h2>
+
+    
+<body>
+
+    <form action="/addAirportProc" method="POST">
+        <label for="airport">Airport name:</label>
+		<input type="text" name="airport" placeholder="IATA Code e.g JFK" maxlength="3" required /></br></br>
+
+        <label for="city">City:</label>
+        <input type="text" name="city" maxlength="20" required /></br></br>
+
+        <input type="submit" value=Add />
+		{% if error %}
+		<p class="error"><strong>Error:</strong> {{error}}</p>
+		{% endif %}
+	</form>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

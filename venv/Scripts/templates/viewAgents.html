@@ -1,0 +1,88 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+    <h2>
+        Top 5 Booking Agent Based on Ticket Sales
+    </h2>
+
+    
+<body>
+
+    <h3>
+        Past month
+    </h3>
+
+    {% for line in month %}
+    <ul style="list-style-type:none;">
+        <li> 
+            <a href = {{ url_for('top5Agent', crit=line['month'], typee = 'month' ) }}> {{line['month']}}</a>
+        </li>
+      </ul>
+    
+    {% endfor %}
+
+    <h3>
+        Past year
+    </h3>
+
+    {% for line in year %}
+    <ul style="list-style-type:none;">
+        <li> 
+            <a href = {{ url_for('top5Agent', crit=line['year'], typee = 'year' ) }}> {{line['year']}}</a>
+        </li>
+      </ul>
+    
+    {% endfor %}
+
+    <h2>
+        Top 5 Booking Agent Based on Commissions
+    </h2>
+
+    <h3>
+        Previous year
+    </h3>
+
+    <style type="text/css">
+        table tr:nth-child(2) {
+            counter-reset: rowNumber ;
+        }
+        table tr td:first-child::before {
+            content: counter(rowNumber);
+ 
+        }
+
+        table tr {
+            counter-increment: rowNumber;
+        }
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+            
+    </style>
+
+    <table>
+        <th>No.</th>
+        <th>Agent</th>
+        <th>Total Commission</th>
+
+        {% for line in commission %}
+        <tr>
+            <td>{{rowNumber}}</td>
+            <td>{{line['agent_email']}}</td>
+            <td>{{line['tot_commission']}}</td>
+        </tr>
+        {% endfor %}
+    
+    </table></br>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

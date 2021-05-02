@@ -8,9 +8,9 @@ app = Flask(__name__)
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
-					   port = 3306, #Make sure this matches your database port!
+					   port = 8889, #Make sure this matches your database port!
                        user='root',
-                       password='', #Make sure this matches too
+                       password='root', #Make sure this matches too
                        db='airline',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -102,12 +102,19 @@ def viewflightsStaff():
 def flightBySourceStaff():
 	#grabs information from the forms
 	airport = request.form['sourceairport']
-
-	#cursor used to send queries
+	username = session['username']
 	cursor = conn.cursor()
-	#executes query
-	query = 'SELECT * FROM flight WHERE depart_airport = %s'
-	cursor.execute(query, (airport))
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
+	query = 'SELECT * FROM flight WHERE depart_airport = %s AND airline_name = %s'
+	cursor.execute(query, (airport, airline['airline_name']))
 	#stores the results in a variable
 	data = cursor.fetchall()
 	#use fetchall() if you are expecting more than 1 data row
@@ -119,9 +126,19 @@ def flightBySourceStaff():
 def flightByDest():
 	airport = request.form['destairport']
 
+	username = session['username']
 	cursor = conn.cursor()
-	query = 'SELECT * FROM flight WHERE arrive_airport = %s'
-	cursor.execute(query, (airport))
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
+	query = 'SELECT * FROM flight WHERE arrive_airport = %s AND airline_name = %s'
+	cursor.execute(query, (airport, airline['airline_name']))
 	data = cursor.fetchall()
 	cursor.close()
 	return render_template('viewflightsStaff.html', flights=data)
@@ -130,11 +147,23 @@ def flightByDest():
 #maybe add date range later
 @app.route('/flightByDateRange', methods=['GET', 'POST'])
 def flightByDateRange():
-	departdate = request.form['departdate']
+	startdate = request.form['startdate']
+	enddate = request.form['enddate']
 
+	username = session['username']
 	cursor = conn.cursor()
-	query = 'SELECT * FROM flight WHERE depart_date = %s' 
-	cursor.execute(query, (departdate))
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
+	query = 'SELECT * FROM flight WHERE depart_date >= %s AND depart_date <= %s AND airline_name = %s' 
+	cursor.execute(query, (startdate, enddate, airline['airline_name']))
+	
 	data = cursor.fetchall()
 	cursor.close()
 	return render_template('viewflightsStaff.html', flights=data)
@@ -165,10 +194,20 @@ def passengerList(airlinename, flightnum, depdate, deptime):
 @app.route('/addFlight')
 def addFlight():
 	#cursor used to send queries
+	username = session['username']
 	cursor = conn.cursor()
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
 	#executes query
 	query = '''
-    SELECT flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
+    SELECT flight.airline_name, flight_num, depart_date, depart_time, arrive_date, arrive_time,flight_status, base_price, depart_airport, arrive_airport, airplane_ID 
     FROM airlineStaff, flight 
     WHERE airlineStaff.airline_name = flight.airline_name AND DATEDIFF(depart_date,CURRENT_DATE()) <= 30 AND DATEDIFF(depart_date, CURRENT_DATE()) >= 0
     '''
@@ -177,15 +216,30 @@ def addFlight():
 	#stores the results in a variable
 	data = cursor.fetchall()
 	#use fetchall() if you are expecting more than 1 data row
+
+	airp_query = '''
+	SELECT airport_name
+	FROM airport
+	'''
+	cursor.execute(airp_query)
+	airp_data = cursor.fetchall()
+
+	airpID_query = '''
+	SELECT airplane_ID
+	FROM airplane
+	WHERE airline_name = %s
+	'''
+	cursor.execute(airpID_query, (airline['airline_name']))
+	airpID_data = cursor.fetchall()
+
 	cursor.close()
-	return render_template('addFlight.html', flights = data)
+	return render_template('addFlight.html', flights = data, airport = airp_data, airplaneID = airpID_data)
 
 #Define route for adding Flights form
 @app.route('/addFlightProc', methods=['GET', 'POST'])
 def addFlightProc():
 	#edit so that airline, airplaneID, depairp and arrairp must exist
 	#add default value
-	airline = request.form['airline']
 	flightnum = request.form['flightnum']
 	depdate = request.form['depdate']
 	deptime = request.form['deptime']
@@ -197,9 +251,19 @@ def addFlightProc():
 	arrairp = request.form['arrairp']
 	airplaneID = request.form['airplaneID']
 
+	username = session['username']
 	cursor = conn.cursor()
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
 	query = 'SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s'
-	cursor.execute(query, (airline, flightnum, depdate, deptime))
+	cursor.execute(query, (airline['airline_name'], flightnum, depdate, deptime))
 	data = cursor.fetchone()
 	
 	error = None
@@ -213,7 +277,7 @@ def addFlightProc():
 		cursor.execute(ins, (airline, flightnum, depdate, deptime, arrdate, arrtime, status, price, depairp, arrairp, airplaneID))
 		conn.commit()
 		cursor.close()
-		return render_template('addFlight.html')
+		return redirect(url_for('addFlight'))
 	
 #Define route for change flight status
 @app.route('/flightStatus')
@@ -223,15 +287,25 @@ def flightStatus():
 #Define route for change flight status form
 @app.route('/flightStatusProc', methods=['GET', 'POST'])
 def flightStatusProc():
-	airline = request.form['airline']
+	username = session['username']
+
 	flightnum = request.form['flightnum']
 	depdate = request.form['depdate']
 	deptime = request.form['deptime']
 	status = request.form['status']
 
 	cursor = conn.cursor()
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
 	query = 'SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s'
-	cursor.execute(query, (airline, flightnum, depdate, deptime))
+	cursor.execute(query, (airline['airline_name'], flightnum, depdate, deptime))
 	data = cursor.fetchone()
 	
 	error = None
@@ -261,13 +335,21 @@ def addPlane():
 #Define route for adding new plane form
 @app.route('/addPlaneProc', methods=['GET', 'POST'])
 def addPlaneProc():
-	airline = request.form['airline']
 	airplaneID = request.form['airplaneID']
 	seat = request.form['seat']
 
 	cursor = conn.cursor()
+
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	airline = cursor.fetchone()
+
 	query = 'SELECT * FROM airplane WHERE airline_name = %s AND airplane_ID = %s'
-	cursor.execute(query, (airline, airplaneID))
+	cursor.execute(query, (airline['airline_name'], airplaneID))
 	data = cursor.fetchone()
 	
 	error = None
@@ -303,7 +385,394 @@ def addPlaneConfirm(airlinename, airplaneID):
 	cursor.close()
 	return render_template('addPlaneConfirm.html', plane = data, airplaneID = airplaneID)
 
+#Define route for adding new airport
+@app.route('/addAirport')
+def addAirport():
+	return render_template('addAirport.html')
 
+#Define route for adding new airport form
+@app.route('/addAirportProc', methods=['GET', 'POST'])
+def addAirportProc():
+	airport = request.form['airport']
+	city = request.form['city']
+
+	cursor = conn.cursor()
+	query = 'SELECT * FROM airport WHERE airport_name = %s AND city = %s'
+	cursor.execute(query, (airport, city))
+	data = cursor.fetchone()
+	
+	error = None
+
+	if (data):
+		#returns an error message to the html page
+		error = 'Airport already exist'
+		return render_template('addAirport.html', error=error)
+	else:
+		ins = 'INSERT INTO airport VALUES(%s, %s)'
+		cursor.execute(ins, (airport, city))
+		conn.commit()
+		cursor.close()
+		return render_template('addAirport.html')
+	return render_template('addAirport.html')
+
+#Define route for view flight ratings
+@app.route('/flightRatings')
+def flightRatings():
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+	query = '''
+    SELECT airline_name, flight_num, depart_date, depart_time, CAST(AVG(rating) AS DECIMAL(1,0)) AS avgRating 
+	FROM review WHERE airline_name = %s
+	GROUP BY airline_name, flight_num, depart_date, depart_time
+    '''
+	cursor.execute(query, (airline['airline_name']))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	cursor.close()
+
+	return render_template('flightRatings.html', rating = data)
+
+
+#Define route for all flight ratings
+@app.route('/allFlightRatings<airlinename>/<flightnum>/<depdate>/<deptime>/')
+def allFlightRatings(airlinename, flightnum, depdate, deptime):
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	query = '''
+    SELECT email, comment, rating
+	FROM review
+	WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s
+	'''
+    #default flight view within 30 days
+	cursor.execute(query, (airlinename, flightnum, depdate, deptime))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+	return render_template('allFlightRatings.html', ratings = data)
+
+#Define route for view booking agents
+@app.route('/viewAgents')
+def viewAgents():
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	#executes query
+	month_query = '''
+    SELECT MONTHNAME(purchase_date) AS month 
+	FROM ticket, cust_purchases 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND agent_email is not NULL 
+	AND YEAR(purchase_date) = YEAR(CURRENT_DATE) AND MONTH(purchase_date) < MONTH(CURRENT_DATE) 
+	AND ticket.airline_name = %s
+	GROUP BY MONTHNAME(purchase_date) ASC
+	'''
+    #default flight view within 30 days
+	cursor.execute(month_query, (airline['airline_name']))
+	#stores the results in a variable
+	data = cursor.fetchall()
+
+	year_query = '''
+    SELECT YEAR(purchase_date) AS year 
+	FROM ticket, cust_purchases 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND agent_email is not NULL 
+	AND YEAR(purchase_date) < YEAR(CURRENT_DATE) AND ticket.airline_name = %s
+	GROUP BY YEAR(purchase_date) ASC
+	'''
+	cursor.execute(year_query, (airline['airline_name']))
+	year_data = cursor.fetchall()
+
+	comm_query = '''
+	SELECT SUM(CAST(sold_price*0.1 AS DECIMAL(10,2))) AS tot_commission, agent_email, YEAR(purchase_date) AS year 
+	FROM ticket, cust_purchases 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND agent_email is not NULL 
+	AND YEAR(purchase_date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))
+	AND ticket.airline_name = %s
+	GROUP BY agent_email, year ORDER BY tot_commission DESC
+	'''
+	cursor.execute(comm_query, (airline['airline_name']))
+	comm = cursor.fetchall()
+	cursor.close()
+
+	return render_template('viewAgents.html', month = data, year = year_data, commission = comm)
+
+#Define route for view monthly/yearly booking agents based on ticket sales
+@app.route('/top5Agent/<crit>/<typee>/')
+def top5Agent(crit, typee):
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	#executes query
+	if typee == 'month':
+		query = '''
+    	SELECT agent_email, MONTHNAME(purchase_date) AS month, COUNT(ticket_ID) AS ticket_sales 
+		FROM cust_purchases, ticket 
+		WHERE cust_purchases.ticket_ID = ticket.ID AND agent_email is not NULL 
+		AND YEAR(purchase_date) = YEAR(CURRENT_DATE) AND MONTH(purchase_date) < MONTH(CURRENT_DATE) 
+		AND MONTHNAME(purchase_date) = %s AND ticket.airline_name = %s
+		GROUP BY agent_email, MONTHNAME(purchase_date) ORDER BY ticket_sales DESC LIMIT 5
+		'''
+	if typee == 'year':
+		query = '''
+    	SELECT agent_email, YEAR(purchase_date) AS year, COUNT(ticket_ID) AS ticket_sales 
+		FROM cust_purchases, ticket 
+		WHERE cust_purchases.ticket_ID = ticket.ID AND agent_email is not NULL 
+		AND YEAR(purchase_date) < YEAR(CURRENT_DATE)
+		AND YEAR(purchase_date) = %s AND ticket.airline_name = %s
+		GROUP BY agent_email, YEAR(purchase_date) ORDER BY ticket_sales DESC LIMIT 5
+		'''
+    #default flight view within 30 days
+	cursor.execute(query, (crit, airline['airline_name']))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+	cursor.close()
+
+	return render_template('top5Agent.html', agent = data, crit = crit)
+
+#Define route for view freq customers
+@app.route('/frequentCustomers')
+def frequentCustomers():
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	max_ticket_query = '''
+    SELECT MAX(ticket_count) AS max_ticket FROM (
+	SELECT cust_email, COUNT(ID) as ticket_count 
+	FROM ticket, cust_purchases WHERE cust_purchases.ticket_ID = ticket.ID 
+	AND YEAR(purchase_date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))
+	AND ticket.airline_name = %s
+	GROUP BY cust_email) AS T
+	'''
+	cursor.execute(max_ticket_query, (airline['airline_name']))
+	#stores the results in a variable
+	max_data = cursor.fetchone()
+
+	query = '''
+	SELECT cust_email, COUNT(ID) as ticket_count 
+	FROM ticket, cust_purchases WHERE cust_purchases.ticket_ID = ticket.ID 
+	AND YEAR(purchase_date) = YEAR(DATE_SUB(CURDATE(), INTERVAL 1 YEAR))
+	AND ticket.airline_name = %s
+	GROUP BY cust_email HAVING ticket_count = %s
+	'''
+	cursor.execute(query, (airline['airline_name'], max_data['max_ticket']) )
+	#stores the results in a variable
+	data = cursor.fetchall()
+
+	cust_query = '''
+	SELECT DISTINCT name, cust_purchases.cust_email AS email 
+	FROM customer, cust_purchases, ticket 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND cust_purchases.cust_email = customer.email 
+	AND ticket.airline_name = %s
+	'''
+	cursor.execute(cust_query, (airline['airline_name']))
+	cust_data = cursor.fetchall()
+	cursor.close()
+
+	return render_template('frequentCustomers.html', customer = data, allCustomer = cust_data)
+
+#Define route for all flights for a particular customer
+@app.route('/customerFlights/<email>/')
+def customerFlights(email):
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+	
+	#executes query
+	key_query = '''
+    SELECT DISTINCT airline_name, flight_num, depart_date, depart_time 
+	FROM cust_purchases, ticket WHERE cust_purchases.ticket_ID = ticket.ID 
+	AND cust_purchases.cust_email = %s AND ticket.airline_name = %s
+	'''
+    #default flight view within 30 days
+	cursor.execute(key_query, (email, airline['airline_name']))
+	#stores the results in a variable
+	key_data = cursor.fetchall()
+	#use fetchall() if you are expecting more than 1 data row
+
+	query = '''
+	SELECT DISTINCT flight.airline_name, flight.flight_num, flight.depart_date, flight.depart_time , 
+	flight.arrive_date, flight.arrive_time, flight.flight_status, flight.base_price, 
+	flight.depart_airport, flight.arrive_airport, flight.airplane_ID
+	FROM cust_purchases, ticket, flight 
+	WHERE ticket.airline_name = flight.airline_name AND ticket.flight_num = flight.flight_num 
+	AND ticket.depart_date = flight.depart_date AND ticket.depart_time = flight.depart_time 
+	AND cust_purchases.ticket_ID = ticket.ID AND cust_purchases.cust_email = %s
+	AND ticket.airline_name = %s ORDER BY flight.depart_date
+	'''
+	cursor.execute(query, (email, airline['airline_name']))
+	#stores the results in a variable
+	data = cursor.fetchall()
+	cursor.close()
+
+	return render_template('customerFlights.html', flights = data)
+
+#Define route for view Report
+@app.route('/viewReports')
+def viewReports():
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	year_query = '''
+	SELECT YEAR(purchase_date) AS year, COUNT(ID) as ticket_sales 
+	FROM ticket 
+    WHERE YEAR(purchase_date) < YEAR(CURRENT_DATE)  AND airline_name = %s 
+	GROUP BY YEAR(purchase_date)
+	ORDER BY YEAR(purchase_date) ASC
+	'''
+	cursor.execute(year_query, (airline['airline_name']))
+	#stores the results in a variable
+	yearly = cursor.fetchall()
+
+	month_query = '''
+	SELECT MONTHNAME(purchase_date) AS month, COUNT(ID) as ticket_sales 
+	FROM ticket 
+    WHERE YEAR(purchase_date) = YEAR(CURRENT_DATE)  
+	AND airline_name = %s GROUP BY MONTHNAME(purchase_date)
+	ORDER BY MONTHNAME(purchase_date) ASC
+	'''
+	cursor.execute(month_query, (airline['airline_name']))
+	#stores the results in a variable
+	monthly = cursor.fetchall()
+
+	for each in monthly:
+		print(each['ticket_sales'])
+
+	cursor.close()
+	return render_template('viewReports.html', monthly = monthly, yearly = yearly)
+
+#Define route for view Report date form
+@app.route('/viewReportDate', methods=['GET', 'POST'])
+def viewReportDate():
+	username = session['username']
+	startdate = request.form['startdate']
+	enddate = request.form['enddate']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	query = '''
+	SELECT purchase_date, COUNT(ID) as ticket_sales FROM ticket 
+    WHERE purchase_date >= %s AND purchase_date <= %s AND airline_name = %s 
+	GROUP BY purchase_date ORDER BY purchase_date ASC
+	'''
+	cursor.execute(query, (startdate, enddate, airline['airline_name']))
+	data = cursor.fetchall()
+
+	for each in data:
+		print(each['purchase_date'])
+
+	cursor.close()
+	return render_template('dateChart.html', daterange = data)
+
+#Define route for date Chart
+@app.route('/dateChart')
+def dateChart():
+	return render_template('dateChart.html')
+
+#Define route for view revenue
+@app.route('/compareRevenue')
+def compareRevenue():
+	username = session['username']
+	#cursor used to send queries
+	cursor = conn.cursor()
+	#executes query
+	airline_query = '''
+    SELECT airline_name
+    FROM airlineStaff 
+    WHERE username = %s
+    '''
+	cursor.execute(airline_query, (username))
+	#stores the results in a variable
+	airline = cursor.fetchone()
+
+	indirect = '''
+	SELECT SUM(sold_price) AS revenue FROM ticket, cust_purchases 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND airline_name = %s
+	AND agent_email is not NULL
+	'''
+	cursor.execute(indirect, (airline['airline_name']))
+	#stores the results in a variable
+	indirect_data = cursor.fetchone()
+
+	direct = '''
+	SELECT SUM(sold_price) AS revenue FROM ticket, cust_purchases 
+	WHERE cust_purchases.ticket_ID = ticket.ID AND airline_name = %s 
+	AND agent_email is NULL
+	'''
+	cursor.execute(direct, (airline['airline_name']))
+	#stores the results in a variable
+	direct_data = cursor.fetchone()
+
+	cursor.close()
+	return render_template('compareRevenue.html', indirect = indirect_data, direct = direct_data)
+	
 #Define route for customer login
 @app.route('/logincust')
 def logincust():
@@ -852,11 +1321,12 @@ def purchaseTicketAgentAuth():
 #Home page for staff
 @app.route('/homestaff')
 def homestaff():
-
 	username = session['username']
 	cursor = conn.cursor()
+
 	query = 'SELECT * FROM airlinestaff WHERE username = %s'
 	cursor.execute(query, (username))
+
 	userdata = cursor.fetchone()
 	query = """
 			SELECT DISTINCT
@@ -892,8 +1362,22 @@ def homestaff():
 			"""
 	cursor.execute(query)
 	topdestsyear = cursor.fetchall()
+	
+	query = '''
+    SELECT * 
+    FROM flight 
+    WHERE flight.airline_name = %s AND DATEDIFF(depart_date,CURRENT_DATE()) <= 30 
+	AND DATEDIFF(depart_date, CURRENT_DATE()) >= 0
+    '''
+    #default flight view within 30 days
+	cursor.execute(query, (userdata['airline_name']))
+	#stores the results in a variable
+	flights_data = cursor.fetchall()
+
 	cursor.close()
-	return render_template('homestaff.html', airlinestaff=userdata, topdestsmonth=topdestsmonth, topdestsyear=topdestsyear)
+	
+	return render_template('homestaff.html', airlinestaff=userdata, topdestsmonth=topdestsmonth, topdestsyear=topdestsyear, flights = flights_data)
+
 
 #Define route to register customer
 @app.route('/registercust')

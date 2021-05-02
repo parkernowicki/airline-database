@@ -1,0 +1,70 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+
+    <h3>
+        Date Range
+    </h3>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+    <div class= "col-md-6 offset-md-3 my-5">
+        <div class= "card">
+          <div class= "card-body"></div>
+          <div class= "card-body">
+            <canvas id="dateChart" width="400" height="400"></canvas>
+          </div>
+        </div>
+      </div >
+    
+      <script>
+        var lineChart = document.getElementById('dateChart')
+        var lC = new Chart(lineChart, {
+          type: 'line',
+          data: {
+            
+            labels:[ 
+              {% for item in daterange %}
+                 "{{ item.purchase_date }}",
+              {% endfor %}
+            ],
+    
+            datasets:[{
+              label: "Ticket sales",
+              backgroundColor: 'rgb(255, 99, 132)',
+              borderColor: 'rgb(255, 99, 132)',
+              fill: false,
+              tension: 0,
+              data: [
+                {% for item in daterange %}
+                  "{{ item.ticket_sales }}",
+                {% endfor %}
+              ],
+            }]
+          },
+    
+          options: {
+            maintainAspectRatio: false,
+            responsive: false,
+            scales: {
+              yAxes: [ {
+                ticks: {
+                  beginAtZero: true
+                }
+              }
+              ]
+            }
+          }
+        })
+    
+      </script>
+
+    <a href="/viewReports">Go back</a>
+
+</body>
+
+</html>

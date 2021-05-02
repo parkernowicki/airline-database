@@ -1,0 +1,51 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+    <h2>
+        Flight ratings
+    </h2>
+
+    
+<body>
+
+    <style type="text/css">
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Average Rating</th>
+        <th>Comments and Ratings</th>
+
+        {% for line in rating %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['avgRating']}}</td>
+            <td> 
+                <a href = {{ url_for('allFlightRatings' ,airlinename=line['airline_name'], flightnum=line['flight_num'], depdate=line['depart_date'], deptime=line['depart_time'] ) }}> Detail</a>
+            </td>
+        </tr>
+        {% endfor %}
+
+
+    </table></br>
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

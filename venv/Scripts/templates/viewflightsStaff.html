@@ -24,9 +24,10 @@
         {% endif %}
     </form>
 
-    Search by departure date </br>
+    Search by date range (departure date) </br>
     <form action="/flightByDateRange" method="POST">
-        <input type="date" name="departdate" placeholder="yyyy-mm-dd" required /> </br>
+        <input type="date" name="startdate" placeholder="yyyy-mm-dd" required /> Start date</br>
+        <input type="date" name="enddate" placeholder="yyyy-mm-dd" required /> End date</br>
         <input type="submit" value=Search />
         {% if error %}
         <p class="error"><strong>Error:</strong> {{error}}</p>
@@ -40,7 +41,8 @@
             padding-right: 2px;
         }
     </style>
-
+    
+    <p>Search result:</p>
     <table>
         <th>Airline</th>
         <th>Flight No.</th>

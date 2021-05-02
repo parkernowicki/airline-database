@@ -28,6 +28,42 @@
         }
     </style>
 
+    <p>Upcoming flights:</p>
+
+    <table>
+        <th>Airline</th>
+        <th>Flight No.</th>
+        <th>Departure Date</th>
+        <th>Departure Time</th>
+        <th>Arrival Date</th>
+        <th>Arrival Time</th>
+        <th>Status</th>
+        <th>Base Price</th>
+        <th>Departure Airport</th>
+        <th>Arrival Airport</th>
+        <th>Airplane</th>
+        <th>Passenger List</th>
+
+        {% for line in flights %}
+        <tr>
+            <td>{{line['airline_name']}}</td>
+            <td>{{line['flight_num']}}</td>
+            <td>{{line['depart_date']}}</td>
+            <td>{{line['depart_time']}}</td>
+            <td>{{line['arrive_date']}}</td>
+            <td>{{line['arrive_time']}}</td>
+            <td>{{line['flight_status']}}</td>
+            <td>${{line['base_price']}}</td>
+            <td>{{line['depart_airport']}}</td>
+            <td>{{line['arrive_airport']}}</td>
+            <td>{{line['airplane_ID']}}</td>
+            <td> 
+                <a href = {{ url_for('passengerList' ,airlinename=line['airline_name'], flightnum=line['flight_num'], depdate=line['depart_date'], deptime=line['depart_time'] ) }}> Detail</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table></br>
+
     <h2>Top destinations:</h2>
     <h3>Last 3 months:</h3>
     <table>
@@ -50,11 +86,12 @@
         <tr>
             <td>{{line['arrive_airport']}}</td>
             <td>{{line['ticketCount']}}</td>
-        </tr>
         {% endfor %}
-    </table></br>
+    </table>
+            
+    
 
-    <a href="/logoutusername">Logout</a>
+    </br></br><a href="/logoutusername">Logout</a>
 
 </body>
 

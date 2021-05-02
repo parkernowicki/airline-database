@@ -1,0 +1,53 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+<h2>
+    {{crit}} Top 5
+</h2>
+
+<body>
+    <style type="text/css">
+        table tr:nth-child(2) {
+            counter-reset: rowNumber ;
+        }
+        table tr td:first-child::before {
+            content: counter(rowNumber);
+ 
+        }
+
+        table tr {
+            counter-increment: rowNumber;
+        }
+        table, th, td {
+            border: 1px solid black;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+            
+    </style>
+
+    <table>
+        <th>No.</th>
+        <th>Agent</th>
+        <th>Ticket sales</th>
+
+        {% for line in agent %}
+        <tr>
+            <td>{{rowNumber}}</td>
+            <td>{{line['agent_email']}}</td>
+            <td>{{line['ticket_sales']}}</td>
+        </tr>
+        {% endfor %}
+    
+    </table></br>
+        
+    
+    <a href="/viewAgents">Go back</a>
+
+</body>
+
+</html>

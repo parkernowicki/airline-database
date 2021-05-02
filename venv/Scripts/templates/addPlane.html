@@ -13,11 +13,10 @@
 <body>
 
     <form action="/addPlaneProc" method="POST">
-        Airline name:</br>
-		<input type="text" name="airline" placeholder="Airline" maxlength="20" required /> </br>
-        Airplane ID:</br>
-        <input type="text" name="airplaneID" maxlength="5" required /></br>
-        Seat amount:</br>
+        <label for="airplaneID">Airplane ID:</label>
+        <input type="text" name="airplaneID" maxlength="5" required /></br></br>
+        
+        <label for="seat">Seat amount:</label>
         <input type="number" name="seat" placeholder="000" required /></br></br>
         <input type="submit" value=Add />
 		{% if error %}

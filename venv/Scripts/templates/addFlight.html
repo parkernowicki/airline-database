@@ -5,12 +5,10 @@
     </h1>
 </head>
 
-    <h2>
-        Add new flight
-    </h2>
+    
     
 <body>
-    <b>Upcoming flights</b>
+    Upcoming flights:
 
     <style type="text/css">
         table, th, td {
@@ -50,30 +48,56 @@
         {% endfor %}
     </table></br>
 
-
+    <h2>
+        Add new flight
+    </h2>
     <form action="/addFlightProc" method="POST">
-        Airline name:</br>
-		<input type="text" name="airline" placeholder="Airline" maxlength="20" required /> </br>
-        Flight num:</br>
-        <input type="text" name="flightnum" maxlength="5" required /></br>
-        Depart date:</br>
+        
+        <label for="flightnum">Flight num:</label>
+        <input type="text" name="flightnum" maxlength="5" required /></br></br>
+
+        <label for="depdate">Depart date:</label>
         <input type="date" name="depdate" placeholder="yyyy-mm-dd" required /></br></br>
-        Depart time:</br>
+
+        <label for="deptime">Depart time:</label>
         <input type="time" name="deptime" placeholder="00:00:00" required /></br></br>
-        Arrive date:</br>
+
+        <label for="arrdate">Arrive date:</label>
         <input type="date" name="arrdate" placeholder="yyyy-mm-dd" required /></br></br>
-        Arrive time:</br>
+
+        <label for="arrtime">Arrive time:</label>
         <input type="time" name="arrtime" placeholder="00:00:00" required /></br></br>
-        Flight status:</br>
-        <input type="time" name="status" placeholder="on-time, delayed, cancel" required /></br></br>
-        Base price:</br>
+
+        <label for="status">Flight status:</label>
+        <select name="status">
+            <option value="on-time">On-time</option>
+            <option value="delayed">Delayed</option>
+            <option value="cancelled">Cancelled</option>
+        </select></br></br>
+
+        <label for="price">Base price:</label>
         <input type="number" name="price" placeholder="0.00" required /></br></br>
-        Depart Airport:</br>
-        <input type="text" name="depairp" maxlength="20" required /></br></br>
-        Arrive airport:</br>
-        <input type="text" name="arrairp" maxlength="20" required /></br></br>
-        Airplane ID:</br>
-        <input type="text" name="airplaneID" maxlength="5" required /></br></br>
+
+        <label for="depairp">Depart airport:</label>
+        <select name="depairp">
+            {% for line in airport %}
+            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
+            {% endfor %}
+        </select></br></br>
+        
+        <label for="arrairp">Arrive airport:</label>
+        <select name="arrairp">
+            {% for line in airport %}
+            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
+            {% endfor %}
+        </select></br></br>
+
+        <label for="airplaneID">Airplane ID:</label>
+        <select name="arrairp">
+            {% for line in airplaneID %}
+            <option value="{{ line.airplane_ID }}">{{ line.airplane_ID }}</option>
+            {% endfor %}
+        </select></br></br>
         <input type="submit" value=Add />
 		{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>

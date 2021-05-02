@@ -1,0 +1,148 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<body>
+
+  <h2>
+    View reports
+  </h2>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+    <h3>
+        Monthly
+    </h3>
+    <div class= "col-md-6 offset-md-3 my-5">
+      <div class= "card">
+        <div class= "card-body"></div>
+        <div class= "card-body">
+          <canvas id="monthChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div >
+
+    
+    
+
+    <script>
+      var barChart = document.getElementById('monthChart')
+      var bC = new Chart(barChart, {
+        type: 'bar',
+        data: {
+          
+          labels:[ 
+            {% for item in monthly %}
+               "{{ item.month }}",
+            {% endfor %}
+          ],
+
+          datasets:[{
+            label: "Ticket sales",
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: [
+              {% for item in monthly %}
+                "{{ item.ticket_sales }}",
+              {% endfor %}
+            ],
+          }]
+        },
+
+        options: {
+          maintainAspectRatio: false,
+          responsive: false,
+          scales: {
+            yAxes: [ {
+              ticks: {
+                beginAtZero: true
+              }
+            }
+            ],
+            xAxes: [{
+              barPercentage: 0.4
+            }]
+          }
+        }
+      })
+
+    </script>
+
+    <h3>
+        Yearly
+    </h3>
+
+    <div class= "col-md-6 offset-md-3 my-5">
+      <div class= "card">
+        <div class= "card-body"></div>
+        <div class= "card-body">
+          <canvas id="yearChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div >
+
+    <script>
+      var barChart = document.getElementById('yearChart')
+      var bC = new Chart(barChart, {
+        type: 'bar',
+        data: {
+          
+          labels:[ 
+            {% for item in yearly %}
+               "{{ item.year }}",
+            {% endfor %}
+          ],
+
+          datasets:[{
+            label: "Ticket sales",
+            backgroundColor: 'rgb(255, 99, 132)',
+            borderColor: 'rgb(255, 99, 132)',
+            data: [
+              {% for item in yearly %}
+                "{{ item.ticket_sales }}",
+              {% endfor %}
+            ],
+          }]
+        },
+
+        options: {
+          maintainAspectRatio: false,
+          responsive: false,
+          scales: {
+            yAxes: [ {
+              ticks: {
+                beginAtZero: true
+              }
+            }
+            ],
+            xAxes: [{
+              barPercentage: 0.4
+            }]
+          }
+        }
+      })
+
+    </script>
+
+  <h3>
+    Date Range
+  </h3>
+
+  <form action="/viewReportDate" method="POST">
+    <input type="date" name="startdate" placeholder="yyyy-mm-dd" required /> Start date</br>
+    <input type="date" name="enddate" placeholder="yyyy-mm-dd" required /> End date</br>
+    <input type="submit" value=Search />
+    {% if error %}
+    <p class="error"><strong>Error:</strong> {{error}}</p>
+    {% endif %}
+  </form>
+  
+  
+
+  <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

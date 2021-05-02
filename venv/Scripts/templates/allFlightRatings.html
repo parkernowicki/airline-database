@@ -1,0 +1,40 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+<h2>
+    Ratings and Comments
+</h2>
+<body>
+
+<style type="text/css">
+    table, th, td {
+        border: 1px solid black;
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+</style>
+
+<table>
+    <th>Email</th>
+    <th>Comment</th>
+    <th>Rating</th>
+
+    {% for line in ratings %}
+        <tr>
+            <td>{{line['email']}}</td>
+            <td>{{line['comment']}}</td>
+            <td>{{line['rating']}}</td>
+        </tr>
+    {% endfor %}
+        
+
+</table></br>
+
+<a href="/homestaff">Go back</a>
+
+</body>
+
+</html>

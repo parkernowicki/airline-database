@@ -1,0 +1,58 @@
+<html>
+<head>
+    <h1>
+        NYU Tandon Airline Database System
+    </h1>
+</head>
+
+<h2>
+    Comparison of revenue earned
+  </h2>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+
+<body>
+    <div class= "col-md-6 offset-md-3 my-5">
+        <div class= "card">
+          <div class= "card-body"></div>
+          <div class= "card-body">
+            <canvas id="revChart" width="400" height="400"></canvas>
+          </div>
+        </div>
+    </div >
+
+    <script>
+        var pieChart = document.getElementById('revChart')
+        var pC = new Chart(pieChart, {
+          type: 'pie',
+          data: {
+            
+            labels:[ 
+              'Direct sales', 'Indirect sales'
+            ],
+  
+            datasets:[{
+              label: "Revenue earned",
+              backgroundColor: ['green', 'orange'],
+              borderColor: 'white',
+              data: [
+                  "{{ direct.revenue }}", "{{ indirect.revenue }}"
+              ],
+            }]
+          },
+  
+          options: {
+            maintainAspectRatio: false,
+            responsive: false,
+          }
+        })
+  
+      </script>
+
+
+
+    <a href="/homestaff">Go back</a>
+
+</body>
+
+</html>
