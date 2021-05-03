@@ -56,6 +56,20 @@
         <label for="flightnum">Flight num:</label>
         <input type="text" name="flightnum" maxlength="5" required /></br></br>
 
+        <label for="depairp">Depart airport:</label>
+        <select name="depairp">
+            {% for line in airport %}
+            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
+            {% endfor %}
+        </select></br></br>
+        
+        <label for="arrairp">Arrive airport:</label>
+        <select name="arrairp">
+            {% for line in airport %}
+            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
+            {% endfor %}
+        </select></br></br>
+
         <label for="depdate">Depart date:</label>
         <input type="date" name="depdate" placeholder="yyyy-mm-dd" required /></br></br>
 
@@ -78,26 +92,13 @@
         <label for="price">Base price:</label>
         <input type="number" name="price" placeholder="0.00" required /></br></br>
 
-        <label for="depairp">Depart airport:</label>
-        <select name="depairp">
-            {% for line in airport %}
-            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
-            {% endfor %}
-        </select></br></br>
-        
-        <label for="arrairp">Arrive airport:</label>
-        <select name="arrairp">
-            {% for line in airport %}
-            <option value="{{ line.airport_name }}">{{ line.airport_name }}</option>
-            {% endfor %}
-        </select></br></br>
-
-        <label for="airplaneID">Airplane ID:</label>
-        <select name="arrairp">
-            {% for line in airplaneID %}
+        <label for="airpID">Airplane ID:</label>
+        <select name="airpID">
+            {% for line in ID %}
             <option value="{{ line.airplane_ID }}">{{ line.airplane_ID }}</option>
             {% endfor %}
         </select></br></br>
+
         <input type="submit" value=Add />
 		{% if error %}
 		<p class="error"><strong>Error:</strong> {{error}}</p>

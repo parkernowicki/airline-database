@@ -144,7 +144,6 @@ def flightByDest():
 	return render_template('viewflightsStaff.html', flights=data)
 
 #Search flights by date
-#maybe add date range later
 @app.route('/flightByDateRange', methods=['GET', 'POST'])
 def flightByDateRange():
 	startdate = request.form['startdate']
@@ -184,8 +183,6 @@ def passengerList(airlinename, flightnum, depdate, deptime):
 	cursor.execute(query, (airlinename, flightnum, depdate, deptime))
 	#stores the results in a variable
 	data = cursor.fetchall()
-	for each in data:
-		print(each['name'])
 	#use fetchall() if you are expecting more than 1 data row
 	cursor.close()
 	return render_template('passengerList.html', passenger = data)
@@ -233,7 +230,7 @@ def addFlight():
 	airpID_data = cursor.fetchall()
 
 	cursor.close()
-	return render_template('addFlight.html', flights = data, airport = airp_data, airplaneID = airpID_data)
+	return render_template('addFlight.html', flights = data, airport = airp_data, ID = airpID_data)
 
 #Define route for adding Flights form
 @app.route('/addFlightProc', methods=['GET', 'POST'])
@@ -249,7 +246,7 @@ def addFlightProc():
 	price = request.form['price']
 	depairp = request.form['depairp']
 	arrairp = request.form['arrairp']
-	airplaneID = request.form['airplaneID']
+	airplaneID = request.form['airpID']
 
 	username = session['username']
 	cursor = conn.cursor()
@@ -274,7 +271,7 @@ def addFlightProc():
 		return render_template('addFlight.html', error=error)
 	else:
 		ins = 'INSERT INTO flight VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-		cursor.execute(ins, (airline, flightnum, depdate, deptime, arrdate, arrtime, status, price, depairp, arrairp, airplaneID))
+		cursor.execute(ins, (airline['airline_name'], flightnum, depdate, deptime, arrdate, arrtime, status, price, depairp, arrairp, airplaneID))
 		conn.commit()
 		cursor.close()
 		return redirect(url_for('addFlight'))
@@ -316,10 +313,10 @@ def flightStatusProc():
 		WHERE airline_name = %s AND flight_num = %s
 		AND depart_date = %s AND depart_time = %s
 		"""
-		cursor.execute(upd, (status, airline, flightnum, depdate, deptime))
+		cursor.execute(upd, (status, airline['airline_name'], flightnum, depdate, deptime))
 		conn.commit()
 		cursor.close()
-		return render_template('flightStatus.html')
+		return redirect(url_for('flightStatus'))
 	else:
 		#returns an error message to the html page
 		error = 'Flight does not exist'
@@ -335,6 +332,7 @@ def addPlane():
 #Define route for adding new plane form
 @app.route('/addPlaneProc', methods=['GET', 'POST'])
 def addPlaneProc():
+	username = session['username']
 	airplaneID = request.form['airplaneID']
 	seat = request.form['seat']
 
@@ -360,10 +358,10 @@ def addPlaneProc():
 		return render_template('addPlane.html', error=error)
 	else:
 		ins = 'INSERT INTO airplane VALUES(%s, %s, %s)'
-		cursor.execute(ins, (airline, airplaneID, seat))
+		cursor.execute(ins, (airline['airline_name'], airplaneID, seat))
 		conn.commit()
 		cursor.close()
-		return redirect(url_for('addPlaneConfirm', airlinename=airline, airplaneID=airplaneID))
+		return redirect(url_for('addPlaneConfirm', airlinename=airline['airline_name'], airplaneID=airplaneID))
 	return render_template('addPlane.html')
 
 #Define route for add plane confirmation
@@ -381,6 +379,7 @@ def addPlaneConfirm(airlinename, airplaneID):
 	cursor.execute(query, (airlinename))
 	#stores the results in a variable
 	data = cursor.fetchall()
+	
 	#use fetchall() if you are expecting more than 1 data row
 	cursor.close()
 	return render_template('addPlaneConfirm.html', plane = data, airplaneID = airplaneID)
