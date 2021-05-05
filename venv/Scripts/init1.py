@@ -9,9 +9,9 @@ app = Flask(__name__)
 
 #Configure MySQL
 conn = pymysql.connect(host='localhost',
-					   port = 8889, #Make sure this matches your database port!
+					   port = 3306, #Make sure this matches your database port!
                        user='root',
-                       password='root', #Make sure this matches too
+                       password='', #Make sure this matches too
                        db='airline',
                        charset='utf8mb4',
                        cursorclass=pymysql.cursors.DictCursor)
@@ -71,6 +71,98 @@ def flightSearch():
 		data += cursor.fetchall()
 	cursor.close()
 	return render_template('viewflights.html', flights=data)
+
+#Define route for viewing flights as customer
+@app.route('/viewflightsCust')
+def viewflightsCust():
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+	cursor.execute(query)
+	data = cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsCust.html', flights=data)
+
+#Search flights as customer
+@app.route('/flightSearchCust',methods=['GET','POST'])
+def flightSearchCust():
+	sourceairport = request.form['sourceairport']
+	destairport = request.form['destairport']
+	departdate = request.form['departdate']
+	returndate = request.form['returndate']
+	flightsearch = []
+	if sourceairport == '':
+		depart_q = ''
+	else:
+		flightsearch.append(sourceairport)
+		depart_q = 'depart_airport = %s AND '
+	if destairport == '':
+		arrive_q = ''
+	else:
+		flightsearch.append(destairport)
+		arrive_q = 'arrive_airport = %s AND '
+	if departdate == '':
+		ddate_q = ''
+	else:
+		flightsearch.append(departdate)
+		ddate_q = 'depart_date = %s AND '
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE ' + depart_q + arrive_q + ddate_q + '(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
+	cursor.execute(query, tuple(flightsearch))
+	data = cursor.fetchall()
+	if returndate != '' and sourceairport != '' and destairport != '' and departdate != '' and returndate > departdate:
+		flightsearch[0] = destairport
+		flightsearch[1] = sourceairport
+		flightsearch[2] = returndate
+		cursor.execute(query, tuple(flightsearch))
+		data += cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsCust.html', flights=data)
+
+#Define route for viewing flights as agent
+@app.route('/viewflightsAgent')
+def viewflightsAgent():
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+	cursor.execute(query)
+	data = cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsAgent.html', flights=data)
+
+#Search flights as agent
+@app.route('/flightSearchAgent',methods=['GET','POST'])
+def flightSearchAgent():
+	sourceairport = request.form['sourceairport']
+	destairport = request.form['destairport']
+	departdate = request.form['departdate']
+	returndate = request.form['returndate']
+	flightsearch = []
+	if sourceairport == '':
+		depart_q = ''
+	else:
+		flightsearch.append(sourceairport)
+		depart_q = 'depart_airport = %s AND '
+	if destairport == '':
+		arrive_q = ''
+	else:
+		flightsearch.append(destairport)
+		arrive_q = 'arrive_airport = %s AND '
+	if departdate == '':
+		ddate_q = ''
+	else:
+		flightsearch.append(departdate)
+		ddate_q = 'depart_date = %s AND '
+	cursor = conn.cursor()
+	query = 'SELECT * FROM flight WHERE ' + depart_q + arrive_q + ddate_q + '(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))'
+	cursor.execute(query, tuple(flightsearch))
+	data = cursor.fetchall()
+	if returndate != '' and sourceairport != '' and destairport != '' and departdate != '' and returndate > departdate:
+		flightsearch[0] = destairport
+		flightsearch[1] = sourceairport
+		flightsearch[2] = returndate
+		cursor.execute(query, tuple(flightsearch))
+		data += cursor.fetchall()
+	cursor.close()
+	return render_template('viewflightsAgent.html', flights=data)
 
 ####################
 #STAFF VIEW FLIGHTS
@@ -896,7 +988,7 @@ def purchaseTicketCustAuth():
 
 	cursor = conn.cursor()
 	
-		if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+	if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
 		error = "Card Expired!"
 		query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
 		cursor.execute(query)
@@ -1285,17 +1377,17 @@ def purchaseTicketAgentAuth():
 
     cursor = conn.cursor()
 
-	if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
-		error = "Card Expired!"
-		query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
-		cursor.execute(query)
-		data = cursor.fetchall()
-		cursor.close()
-		return render_template('purchaseTicketAgent.html', flights=data, error= error)
-	
+    if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+        error = "Card Expired!"
+        query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+        cursor.execute(query)
+        data = cursor.fetchall()
+        cursor.close()
+        return render_template('purchaseTicketAgent.html', flights=data, error= error)
+
     query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
                 (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))
-            """
+            """		
     cursor.execute(query, (airline, flightno, departdate, departtime))
     flightexists = cursor.fetchone()
 
@@ -1322,7 +1414,7 @@ def purchaseTicketAgentAuth():
         flighttickets = flightticketsresult['ticketCount']
 
     query = """
-                SELECT
+				SELECT
                     seat_amount
                 FROM
                     flight NATURAL JOIN airplane
@@ -1543,19 +1635,19 @@ def registerStaffAuth():
 @app.route('/logoutCust')
 def logoutCust():
     session.pop('email')
-    return redirect('/logincust')
+    return redirect('logincust')
 
 @app.route('/logoutAgent')
 def logoutAgent():
     session.pop('email')
-    return redirect('/loginagent')
+    return redirect('loginagent')
 
 #Logout for staff
 @app.route('/logoutusername')
 def logoutusername():
     session.pop('username')
-    return redirect('/loginstaff')
-		
+    return redirect('loginstaff')
+
 app.secret_key = 'some key that you will never guess'
 #Run the app on localhost port 5000
 #debug = True -> you don't have to restart flask

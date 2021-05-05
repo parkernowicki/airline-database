@@ -5,12 +5,19 @@
     </h1>
 </head>
 <body>
-    Welcome, {{customer['name']}} </br></br>
+    Search flights: </br>
+    <form action="/flightSearchAgent" method="POST">
+        <input type="text" name="sourceairport" placeholder="Source airport" maxlength="20" /></br>
+        <input type="text" name="destairport" placeholder="Destination airport" maxlength="20" /></br>
+        <input type="date" name="departdate" /> Departure date</br>
+        <input type="date" name="returndate" /> Return date (For round-trips)</br></br>
+        <input type="submit" value=Search />
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
 
-    <a href="/viewflightsCust">Search flights</a>
-    <a href="/purchaseTicketCust">Purchase a ticket</a>
-    <a href="/rateFlight">Rate a flight</a>
-    <a href="/trackSpending">Track my spending</a></br></br>
+    <!-- Will need round trip date search as well... -->
 
     <style type="text/css">
         table, th, td {
@@ -20,7 +27,6 @@
         }
     </style>
 
-    My upcoming flights:
     <table>
         <th>Airline</th>
         <th>Flight No.</th>
@@ -51,7 +57,7 @@
         {% endfor %}
     </table></br>
 
-    <a href="/logoutCust">Logout</a>
+    <a href="/homeagent">Go back</a>
 
 </body>
 
