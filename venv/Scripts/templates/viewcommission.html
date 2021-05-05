@@ -4,15 +4,26 @@
     <h1>
         NYU Tandon Airline Database System
     </h1>
-    <h2>
-        Commission for past 30 days:
-    </h2>
+
 </head>
 <body>
+    Start Date:</br>
+    <form action="commissionSearch" method="POST">
+        <input type="date" name="startdate" required /></br>
+        End Date:</br>
+        <input type="date" name="enddate" required /></br></br>
+        <input type="submit" value=Search /></br></br>
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{error}}</p>
+        {% endif %}
+    </form>
 
+    <h3>
+        Commission from {{start}} to {{end}}:
+    </h3>
     Tickets Booked: {{tickets}}</br></br>
-    Average Commission: ${{commission/tickets}}</br></br>
-    Commssion in last 30 days: ${{commission}}</br></br>
+    Average Commission: ${{average}}</br></br>
+    Total Commssion: ${{commission}}</br></br>
 
     <a href="/homeagent">Go back</a>
 
