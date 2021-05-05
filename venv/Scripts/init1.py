@@ -1,6 +1,7 @@
 
 #Import Flask Library
 from flask import Flask, render_template, request, session, url_for, redirect
+from datetime import date, timedelta, datetime
 import decimal, pymysql.cursors
 
 #Initialize the app from Flask
@@ -894,6 +895,15 @@ def purchaseTicketCustAuth():
 	cardexp = request.form['cardexp']
 
 	cursor = conn.cursor()
+	
+		if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+		error = "Card Expired!"
+		query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+		cursor.execute(query)
+		data = cursor.fetchall()
+		cursor.close()
+		return render_template('purchaseTicketAgent.html', flights=data, error= error)
+	
 	query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
 				(depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))
 			"""
@@ -1129,8 +1139,6 @@ def homeagent():
     cursor.close()
     return render_template('homeagent.html', bookingagent=data)
 
-
-from datetime import date, timedelta, datetime
 @app.route('/viewcommission')
 def viewcommission():
 	email = session['email']
@@ -1276,6 +1284,15 @@ def purchaseTicketAgentAuth():
     cardexp = request.form['cardexp']
 
     cursor = conn.cursor()
+
+	if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+		error = "Card Expired!"
+		query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
+		cursor.execute(query)
+		data = cursor.fetchall()
+		cursor.close()
+		return render_template('purchaseTicketAgent.html', flights=data, error= error)
+	
     query = """SELECT * FROM flight WHERE airline_name = %s AND flight_num = %s AND depart_date = %s AND depart_time = %s AND
                 (depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME()))
             """
