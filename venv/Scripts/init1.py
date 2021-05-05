@@ -1130,21 +1130,64 @@ def homeagent():
     return render_template('homeagent.html', bookingagent=data)
 
 
+from datetime import date, timedelta, datetime
 @app.route('/viewcommission')
 def viewcommission():
-    email = session['email']
-    cursor = conn.cursor()
-    query = """SELECT sum(sold_price *.1) as sum
-                   FROM cust_purchases c, ticket t
-                   WHERE c.ticket_ID = t.ID AND DATEDIFF( CURRENT_DATE(),t.purchase_date) <= 30 AND email = %s"""
-    cursor.execute(query, (email))
-    commission = round(cursor.fetchone()['sum'], 2)
-    query = """SELECT count(t.ID) as count
-                FROM cust_purchases c, ticket t
-                WHERE email = %s AND DATEDIFF(CURRENT_DATE(),t.purchase_date) <= 30 AND c.ticket_ID = t.ID"""
-    cursor.execute(query,(email))
-    tickets = cursor.fetchone()['count']
-    return render_template('viewcommission.html', commission=commission, tickets=tickets)
+	email = session['email']
+	start = (date.today()-timedelta(days=30))
+	end = date.today()
+	cursor = conn.cursor()
+	query = """SELECT sum(sold_price *.1) as sum
+				   FROM cust_purchases c, ticket t
+				   WHERE c.ticket_ID = t.ID AND DATEDIFF( CURRENT_DATE(),t.purchase_date) <= 30 AND email = %s"""
+	cursor.execute(query, (email))
+	counter = cursor.fetchone()['sum']
+	if counter is None:
+		counter = 0
+	commission = round(counter, 2)
+	query = """SELECT count(t.ID) as count
+				FROM cust_purchases c, ticket t
+				WHERE email = %s AND DATEDIFF(CURRENT_DATE(),t.purchase_date) <= 30 AND c.ticket_ID = t.ID"""
+	cursor.execute(query,(email))
+	tickets = cursor.fetchone()['count']
+	if tickets == 0:
+		average = 0
+	else:
+		average = commission/ tickets
+	return render_template('viewcommission.html', commission=commission, tickets=tickets, average= average, start= start, end= end)
+
+
+@app.route('/commissionSearch', methods=['POST','GET'])
+def commissionSearch():
+	start = request.form['startdate']
+	startcounter = datetime.strptime(start, '%Y-%m-%d')
+	end = request.form['enddate']
+	endcounter = datetime.strptime(end, '%Y-%m-%d')
+	email = session['email']
+	cursor = conn.cursor()
+	error = None
+	if endcounter < startcounter:
+		error = "Ending date before starting date"
+		start = (date.today() - timedelta(days=30))
+		end = date.today()
+	query = """SELECT sum(sold_price *.1) as sum
+				   FROM cust_purchases c, ticket t
+				   WHERE c.ticket_ID = t.ID AND t.purchase_date >= %s AND t.purchase_date <= %s AND email = %s"""
+	cursor.execute(query, (start, end, email))
+	counter = cursor.fetchone()['sum']
+	if counter is None:
+		counter = 0
+	commission = round(counter, 2)
+	query = """SELECT count(t.ID) as count
+					FROM cust_purchases c, ticket t
+					WHERE email = %s AND t.purchase_date >= %s AND t.purchase_date <= %s AND c.ticket_ID = t.ID"""
+	cursor.execute(query, (email, start, end))
+	tickets = cursor.fetchone()['count']
+	if tickets == 0 :
+		average = 0
+	else:
+		average = commission / tickets
+	return render_template('viewcommission.html', commission = commission, tickets= tickets, average= average, error= error, start= start, end= end)
 
 
 @app.route("/viewmyflightsagent")
