@@ -1643,8 +1643,8 @@ def logoutAgent():
     return redirect('loginagent')
 
 #Logout for staff
-@app.route('/logoutusername')
-def logoutusername():
+@app.route('/logoutStaff')
+def logoutStaff():
     session.pop('username')
     return redirect('loginstaff')
 
