@@ -988,7 +988,7 @@ def purchaseTicketCustAuth():
 
 	cursor = conn.cursor()
 	
-	if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+	if datetime.strptime(cardexp, '%Y-%m-%d') < datetime.today():
 		error = "Card Expired!"
 		query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
 		cursor.execute(query)
@@ -1254,6 +1254,7 @@ def viewcommission():
 		average = 0
 	else:
 		average = commission/ tickets
+	cursor.close()
 	return render_template('viewcommission.html', commission=commission, tickets=tickets, average= average, start= start, end= end)
 
 
@@ -1287,6 +1288,7 @@ def commissionSearch():
 		average = 0
 	else:
 		average = commission / tickets
+	cursor.close()
 	return render_template('viewcommission.html', commission = commission, tickets= tickets, average= average, error= error, start= start, end= end)
 
 
@@ -1377,7 +1379,7 @@ def purchaseTicketAgentAuth():
 
     cursor = conn.cursor()
 
-    if datetime.strptime(cardexp, '%Y-%m-%d') < date.today():
+    if datetime.strptime(cardexp, '%Y-%m-%d') < datetime.today():
         error = "Card Expired!"
         query = 'SELECT * FROM flight WHERE depart_date > CURRENT_DATE() OR (depart_date = CURRENT_DATE() AND depart_time > CURRENT_TIME())'
         cursor.execute(query)
