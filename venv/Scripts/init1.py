@@ -1165,7 +1165,7 @@ def trackSpending():
 			WHERE
 				cust_email = %s AND ticket_ID = ID AND purchase_date >= DATE_ADD(CURRENT_DATE, INTERVAL -6 MONTH)
 			GROUP BY
-				MONTH(purchase_date)
+				month
 			ORDER BY
 				purchase_date
 			"""
@@ -1201,7 +1201,7 @@ def trackSpendingAuth():
 			WHERE
 				cust_email = %s AND ticket_ID = ID AND purchase_date >= %s AND purchase_date <= %s
 			GROUP BY
-				MONTH(purchase_date)
+				month
 			ORDER BY
 				purchase_date
 			"""
