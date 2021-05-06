@@ -1167,7 +1167,7 @@ def trackSpending():
 			GROUP BY
 				month
 			ORDER BY
-				purchase_date
+				month
 			"""
 	cursor.execute(query, session['email'])
 	data = cursor.fetchall()
